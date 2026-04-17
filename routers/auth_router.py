@@ -7,7 +7,7 @@ from auth import hash_password, verify_password, create_token, get_current_user
 
 
 
-router=APIRouter(prefix='/api/auth', tags=['Authentication'])
+router=APIRouter(prefix='/auth', tags=['Authentication'])
 
 #for user registration
 @router.post('/registration', response_model= AuthResponse, status_code=201)

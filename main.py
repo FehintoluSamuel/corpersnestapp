@@ -13,12 +13,14 @@ app.add_middleware(
     allow_headers=["*"],
     allow_methods=["*"]
 )
+API_V1_PREFIX = '/api/v1'
+
+app.include_router(auth_router, prefix=API_V1_PREFIX)
 
 @app.get("/")
 async def get_root():
     return {"message": "Welcome to the NYSC Accommodation Management System API"}
 
-app.include_router(auth_router)
 
 
 
