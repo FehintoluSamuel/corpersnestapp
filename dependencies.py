@@ -12,3 +12,20 @@ class Role(str, PyEnum):
 class Status(str, PyEnum):
     active="active"
     suspended ="suspended"
+
+#for listings 
+class ListingType(str, PyEnum):
+    corper_room= "corper_room"
+    landlord_property="landlord_property"
+
+class ListingStatus(str, PyEnum):
+    active= "active"
+    taken= "taken"
+    inactive= "inactive"
+
+
+
+
+
+
+
