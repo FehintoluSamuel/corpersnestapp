@@ -1,31 +1,30 @@
 from enum import Enum as PyEnum
 
-
-
-#for users authentification
+# for users authentication
 class Role(str, PyEnum):
     incoming_corper = "incoming_corper"
     outgoing_corper = "outgoing_corper"
-    landlord        = "landlord"
-    admin           = "admin"
-    
-class Status(str, PyEnum):
-    active="active"
-    suspended ="suspended"
+    landlord = "landlord"
+    admin = "admin"
 
-#for listings 
+class Status(str, PyEnum):
+    active = "active"
+    suspended = "suspended"
+
+# for listings
 class ListingType(str, PyEnum):
-    corper_room= "corper_room"
-    landlord_property="landlord_property"
+    corper_room = "corper_room"
+    landlord_property = "landlord_property"
 
 class ListingStatus(str, PyEnum):
-    active= "active"
-    taken= "taken"
-    inactive= "inactive"
+    active = "active"
+    taken = "taken"
+    inactive = "inactive"
 
-
-
-
-
-
-
+# for community feed
+class PostTag(str, PyEnum):
+    question = "question"
+    tip = "tip"
+    room_available = "room_available"
+    scam_warning = "scam_warning"
+    general = "general"
