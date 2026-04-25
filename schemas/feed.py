@@ -34,12 +34,22 @@ class PostResponse(BaseModel):
     tag: PostTag
     image_url: Optional[str] = None
     likes_count: int
+    comments_count: int = 0
     created_at: datetime
     user: UserResponse
 
     class Config:
         from_attributes = True
-
+        
 class PostWithCommentsResponse(BaseModel):
-    post: PostResponse
-    comments: List[CommentResponse]
+    id: int
+    content: str
+    tag: PostTag
+    image_url: Optional[str] = None
+    likes_count: int
+    created_at: datetime
+    user: UserResponse
+    comments: List[CommentResponse]  # ← flat, not nested under "post"
+
+    class Config:
+        from_attributes = True

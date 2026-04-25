@@ -23,8 +23,9 @@ class ListingStatus(str, PyEnum):
 
 # for community feed
 class PostTag(str, PyEnum):
-    question = "question"
-    tip = "tip"
-    room_available = "room_available"
-    scam_warning = "scam_warning"
-    general = "general"
+    question = 'question'
+    tip = 'tip'
+    room_available = 'room_available'
+    roommate_needed = 'roommate_needed'   # ← add this
+    scam_warning = 'scam_warning'
+    general = 'general'

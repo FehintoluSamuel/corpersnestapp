@@ -37,17 +37,19 @@ class ListingUpdateRequest(BaseModel):
 
 #listing field validation for Listing response
 class ListingResponse(BaseModel):
-    title : str
-    address : str
-    lga : str
-    price_monthly : float
-    bedrooms : int
-    description : Optional[str]= None
-    listing_type : ListingType
-    available_from : date
-    status : ListingStatus
-    created_at : datetime
-    owner : OwnerResponse
+    id: int
+    owner_id: int
+    title: str
+    address: str
+    lga: str
+    price_monthly: float
+    bedrooms: int
+    description: Optional[str] = None
+    listing_type: ListingType
+    available_from: date
+    status: ListingStatus
+    created_at: datetime
+    owner: OwnerResponse
 
     class Config:
         from_attributes = True
