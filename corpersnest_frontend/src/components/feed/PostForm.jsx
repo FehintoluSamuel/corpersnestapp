@@ -6,11 +6,68 @@ import Avatar from '@/components/ui/Avatar'
 import Button from '@/components/ui/Button'
 
 const TAGS = [
-  { value: 'question', label: '❓ Question' },
-  { value: 'tip', label: '💡 Tip' },
-  { value: 'room_available', label: '🏠 Room available' },
-  { value: 'scam_warning', label: '⚠️ Scam warning' },
-  { value: 'general', label: '💬 General' },
+  {
+    value: 'question',
+    label: 'Question',
+    icon: (
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/>
+      </svg>
+    )
+  },
+  {
+    value: 'tip',
+    label: 'Tip',
+    icon: (
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+        <line x1="12" y1="2" x2="12" y2="6"/>
+        <path d="M12 6a6 6 0 016 6c0 2.5-1.5 4.5-3 6H9c-1.5-1.5-3-3.5-3-6a6 6 0 016-6z"/>
+        <line x1="9" y1="21" x2="15" y2="21"/>
+        <line x1="10" y1="18" x2="14" y2="18"/>
+      </svg>
+    )
+  },
+  {
+    value: 'room_available',
+    label: 'Room available',
+    icon: (
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+        <path d="M3 9L12 2L21 9V21H15V14H9V21H3V9Z"/>
+      </svg>
+    )
+  },
+  {
+    value: 'roommate_needed',
+    label: 'Roommate needed',
+    icon: (
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+      </svg>
+    )
+  },
+  {
+    value: 'scam_warning',
+    label: 'Scam warning',
+    icon: (
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+    )
+  },
+  {
+    value: 'general',
+    label: 'General',
+    icon: (
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+      </svg>
+    )
+  },
 ]
 
 export default function PostForm({ onCreated }) {
@@ -70,21 +127,21 @@ export default function PostForm({ onCreated }) {
           </div>
 
           {/* Tag selector */}
-          <div className="flex flex-wrap gap-2 pl-11">
-            {TAGS.map(t => (
-              <button
-                key={t.value}
-                onClick={() => setTag(t.value)}
-                className={`tag tag-${t.value} cursor-pointer transition-all border
-                  ${tag === t.value
-                    ? 'ring-2 ring-[var(--brand)] ring-offset-1'
-                    : 'opacity-60 hover:opacity-100'}`}
-                style={{ borderColor: 'transparent' }}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
+          {TAGS.map(t => (
+  <button
+    key={t.value}
+    onClick={() => setTag(t.value)}
+    className={`tag tag-${t.value} cursor-pointer transition-all border
+      flex items-center gap-1.5
+      ${tag === t.value
+        ? 'ring-2 ring-[var(--brand)] ring-offset-1'
+        : 'opacity-60 hover:opacity-100'}`}
+    style={{ borderColor: 'transparent' }}
+  >
+    {t.icon}
+    {t.label}
+  </button>
+))}
 
           {/* Optional image URL */}
           <input

@@ -7,10 +7,16 @@ import PageWrapper from '@/components/layout/PageWrapper'
 import EmptyState from '@/components/ui/EmptyState'
 import SkeletonCard from '@/components/ui/SkeletonCard'
 
-const TAGS = ['all', 'question', 'tip', 'room_available', 'scam_warning', 'general']
+const TAGS = ['all', 'question', 'tip', 'room_available', 'roommate_needed', 'scam_warning', 'general']
+
 const TAG_LABELS = {
-  all: 'All', question: 'Questions', tip: 'Tips',
-  room_available: 'Rooms', scam_warning: 'Scam alerts', general: 'General',
+  all: 'All',
+  question: 'Questions',
+  tip: 'Tips',
+  room_available: 'Rooms',
+  roommate_needed: 'Roommates',
+  scam_warning: 'Scam alerts',
+  general: 'General',
 }
 
 export default function FeedPage() {
@@ -28,13 +34,16 @@ export default function FeedPage() {
 
   const handleCreated = (post) => setPosts(prev => [post, ...prev])
   const handleDelete = (id) => setPosts(prev => prev.filter(p => p.id !== id))
-  const handleLikeToggle = (id) => {
+  const handleLikeToggle = async (id) => {
+  try {
+    const updatedPost = await feedApi.toggleLike(id)
     setPosts(prev => prev.map(p =>
-      p.id === id
-        ? { ...p, likes_count: (p.likes_count ?? 0) + (p.liked_by_me ? -1 : 1), liked_by_me: !p.liked_by_me }
-        : p
+      p.id === id ? { ...p, likes_count: updatedPost.likes_count } : p
     ))
+  } catch {
+    toast.error('Could not like post')
   }
+}
 
   const filtered = activeTag === 'all' ? posts : posts.filter(p => p.tag === activeTag)
 

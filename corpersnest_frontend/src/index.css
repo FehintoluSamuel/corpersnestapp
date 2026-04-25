@@ -156,6 +156,7 @@ body {
 .tag-room_available { background: #FFF3E0; color: #8B4E00; }
 .tag-scam_warning   { background: #FDECEA; color: #B71C1C; }
 .tag-general   { background: #F3E8FD; color: #5B2D8C; }
+.tag-roommate_needed { background: #E8F4FD; color: #0D47A1; }
 
 /* dark mode tag adjustments */
 .dark .tag-question  { background: #0D2540; color: #7ABFEF; }
@@ -163,6 +164,7 @@ body {
 .dark .tag-room_available { background: #2A1A00; color: #FFB74D; }
 .dark .tag-scam_warning   { background: #2A0A0A; color: #EF9A9A; }
 .dark .tag-general   { background: #1E0D35; color: #CE93D8; }
+.dark .tag-roommate_needed { background: #0D1F35; color: #90CAF9; }
 
 /* listing type badges */
 .badge-corper   { background: var(--brand-light); color: var(--brand); border: 1px solid var(--brand); }

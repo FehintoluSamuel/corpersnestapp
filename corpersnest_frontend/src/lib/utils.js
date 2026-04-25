@@ -8,10 +8,13 @@ export function formatPrice(amount) {
 }
 
 export function formatDate(dateStr) {
-  const date = new Date(dateStr)
+  if (!dateStr) return ''
+  // Handle both timezone-aware and naive datetime strings
+  const date = new Date(dateStr.endsWith('Z') ? dateStr : dateStr + 'Z')
   const now = new Date()
-  const diff = (now - date) / 1000 // seconds
+  const diff = (now - date) / 1000
 
+  if (isNaN(diff)) return ''
   if (diff < 60) return 'just now'
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`

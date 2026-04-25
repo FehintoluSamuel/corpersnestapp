@@ -31,20 +31,17 @@ export default function PostDetail() {
       .finally(() => setLoading(false))
   }, [postId])
 
+  
   const handleLike = async () => {
-    if (!user) { toast.info('Log in to like posts'); return }
-    if (liking) return
-    setLiking(true)
-    try {
-      await feedApi.toggleLike(postId)
-      setPost(prev => ({
-        ...prev,
-        likes_count: (prev.likes_count ?? 0) + (prev.liked_by_me ? -1 : 1),
-        liked_by_me: !prev.liked_by_me,
-      }))
-    } catch { toast.error('Could not like post') }
-    finally { setLiking(false) }
-  }
+  if (!user) { toast.info('Log in to like posts'); return }
+  if (liking) return
+  setLiking(true)
+  try {
+    const updatedPost = await feedApi.toggleLike(postId)
+    setPost(prev => ({ ...prev, likes_count: updatedPost.likes_count }))
+  } catch { toast.error('Could not like post') }
+  finally { setLiking(false) }
+}
 
   const handleDelete = async () => {
     if (!confirm('Delete this post?')) return
@@ -140,7 +137,7 @@ export default function PostDetail() {
         {/* Comments */}
         <div className="card p-5">
           <CommentList
-            postId={post.id}
+            postId={parseInt(postId)}
             comments={post.comments || []}
             onCommentAdded={() =>
               setPost(prev => ({ ...prev, comments_count: (prev.comments_count ?? 0) + 1 }))

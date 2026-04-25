@@ -23,19 +23,16 @@ export default function PostCard({ post, onDelete, onLikeToggle }) {
   const isOwner = user && post.user?.id === user.id
 
   const handleLike = async (e) => {
-    e.preventDefault()
-    if (!user) { toast.info('Log in to like posts'); return }
-    if (liking) return
-    setLiking(true)
-    try {
-      await feedApi.toggleLike(post.id)
-      onLikeToggle?.(post.id)
-    } catch {
-      toast.error('Could not like post')
-    } finally {
-      setLiking(false)
-    }
+  e.preventDefault()
+  if (!user) { toast.info('Log in to like posts'); return }
+  if (liking) return
+  setLiking(true)
+  try {
+    await onLikeToggle?.(post.id)
+  } finally {
+    setLiking(false)
   }
+}
 
   const handleDelete = async (e) => {
     e.preventDefault()

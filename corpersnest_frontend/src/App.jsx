@@ -18,7 +18,14 @@ import FeedPage from '@/pages/feed/FeedPage'
 import PostDetail from '@/pages/feed/PostDetail'
 import ProfilePage from '@/pages/profile/ProfilePage'
 import NotFoundPage from '@/pages/NotFound'
+import HomePage from '@/pages/Home'
+import { useAuth } from '@/context/AuthContext'
 
+function RootRedirect() {
+  const { user, loading } = useAuth()
+  if (loading) return null
+  return user ? <Navigate to="/home" replace /> : <LandingPage />
+}
 export default function App() {
   return (
     <ThemeProvider>
@@ -30,7 +37,7 @@ export default function App() {
               <div className="flex-1">
                 <Routes>
                   {/* Public */}
-                  <Route path="/" element={<LandingPage />} />
+                  <Route path="/" element={<RootRedirect />} />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
 
@@ -49,6 +56,10 @@ export default function App() {
 
                   {/* Fallback */}
                   <Route path="*" element={<NotFoundPage />} />
+
+                  {/* Home */}
+                  <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+
                 </Routes>
               </div>
               <BottomNav />

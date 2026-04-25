@@ -21,6 +21,11 @@ export default function ListingDetail() {
   const navigate = useNavigate()
 
   useEffect(() => {
+    if (!id || id === 'undefined') {
+      toast.error('Invalid listing')
+      navigate('/listings')
+      return
+    }
     listingsApi.getOne(id)
       .then(setListing)
       .catch(() => toast.error('Listing not found'))
@@ -56,7 +61,6 @@ export default function ListingDetail() {
 
   return (
     <PageWrapper>
-      {/* Back */}
       <Link
         to="/listings"
         className="inline-flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] mb-5 transition-colors"
@@ -78,7 +82,8 @@ export default function ListingDetail() {
               <div className="h-64 bg-[var(--bg-subtle)] flex items-center justify-center text-[var(--text-muted)]">
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" opacity="0.3">
                   <rect x="3" y="3" width="18" height="18" rx="2"/>
-                  <circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <path d="M21 15l-5-5L5 21"/>
                 </svg>
               </div>
             )}
@@ -87,41 +92,59 @@ export default function ListingDetail() {
           {/* Details */}
           <div className="card p-5">
             <div className="flex items-start justify-between gap-3 mb-2">
-              <h1 className="text-lg font-semibold text-[var(--text-primary)] leading-snug">{listing.title}</h1>
-              <span className={`tag shrink-0 capitalize ${STATUS_STYLES[listing.status]}`}>{listing.status}</span>
+              <h1 className="text-lg font-semibold text-[var(--text-primary)] leading-snug">
+                {listing.title}
+              </h1>
+              <span className={`tag shrink-0 capitalize ${STATUS_STYLES[listing.status] || ''}`}>
+                {listing.status}
+              </span>
             </div>
 
             <p className="text-sm text-[var(--text-muted)] flex items-center gap-1 mb-4">
               <svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3">
                 <path d="M6 1a4 4 0 100 8A4 4 0 006 1zM6 9v2"/>
               </svg>
-              {listing.address}, {listing.lga}
+              {listing.address}{listing.lga ? `, ${listing.lga}` : ''}
             </p>
 
             <div className="grid grid-cols-2 gap-4 mb-4 p-4 rounded-xl" style={{ background: 'var(--bg-subtle)' }}>
               <div>
                 <p className="text-xs text-[var(--text-muted)] mb-0.5">Monthly rent</p>
-                <p className="text-lg font-semibold text-[var(--brand)]">{formatPrice(listing.price_monthly)}</p>
+                <p className="text-lg font-semibold text-[var(--brand)]">
+                  {listing.price_monthly ? formatPrice(listing.price_monthly) : '—'}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-[var(--text-muted)] mb-0.5">Bedrooms</p>
-                <p className="text-base font-semibold text-[var(--text-primary)]">{listing.bedrooms}</p>
+                <p className="text-base font-semibold text-[var(--text-primary)]">
+                  {listing.bedrooms ?? '—'}
+                </p>
               </div>
               {listing.available_from && (
                 <div>
                   <p className="text-xs text-[var(--text-muted)] mb-0.5">Available from</p>
                   <p className="text-sm font-medium text-[var(--text-primary)]">
-                    {new Date(listing.available_from).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    {new Date(listing.available_from).toLocaleDateString('en-NG', {
+                      day: 'numeric', month: 'short', year: 'numeric'
+                    })}
                   </p>
                 </div>
               )}
-              <div>
-                <p className="text-xs text-[var(--text-muted)] mb-0.5">Type</p>
-                <p className="text-sm font-medium text-[var(--text-primary)] capitalize">{listing.listing_type.replace('_', ' ')}</p>
-              </div>
+              {listing.listing_type && (
+                <div>
+                  <p className="text-xs text-[var(--text-muted)] mb-0.5">Type</p>
+                  <p className="text-sm font-medium text-[var(--text-primary)] capitalize">
+                    {listing.listing_type?.replace(/_/g, ' ')}
+                  </p>
+                </div>
+              )}
             </div>
 
-            <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{listing.description}</p>
+            {listing.description && (
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+                {listing.description}
+              </p>
+            )}
           </div>
         </div>
 
@@ -130,12 +153,18 @@ export default function ListingDetail() {
           {/* Owner card */}
           {listing.owner && (
             <div className="card p-4">
-              <p className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide mb-3">Listed by</p>
+              <p className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide mb-3">
+                Listed by
+              </p>
               <div className="flex items-center gap-3 mb-4">
                 <Avatar name={listing.owner.full_name} size="md" />
                 <div>
-                  <p className="font-semibold text-sm text-[var(--text-primary)]">{listing.owner.full_name}</p>
-                  <p className="text-xs text-[var(--text-muted)] capitalize">{listing.owner.role.replace(/_/g, ' ')}</p>
+                  <p className="font-semibold text-sm text-[var(--text-primary)]">
+                    {listing.owner.full_name}
+                  </p>
+                  <p className="text-xs text-[var(--text-muted)] capitalize">
+                    {listing.owner.role?.replace(/_/g, ' ')}
+                  </p>
                 </div>
               </div>
               {listing.owner.phone_no && (
@@ -152,7 +181,9 @@ export default function ListingDetail() {
           {/* Owner actions */}
           {isOwner && (
             <div className="card p-4 flex flex-col gap-2">
-              <p className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide mb-1">Manage</p>
+              <p className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide mb-1">
+                Manage
+              </p>
               <Link to={`/listings/${id}/edit`}>
                 <Button variant="ghost" fullWidth size="sm">Edit listing</Button>
               </Link>
@@ -163,7 +194,7 @@ export default function ListingDetail() {
           )}
 
           <p className="text-xs text-[var(--text-muted)] text-center">
-            Posted {formatDate(listing.created_at)}
+            Posted {listing.created_at ? formatDate(listing.created_at) : '—'}
           </p>
         </div>
       </div>
