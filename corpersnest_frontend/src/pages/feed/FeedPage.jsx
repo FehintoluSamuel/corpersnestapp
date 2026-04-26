@@ -33,17 +33,21 @@ export default function FeedPage() {
   }, [])
 
   const handleCreated = (post) => setPosts(prev => [post, ...prev])
+
   const handleDelete = (id) => setPosts(prev => prev.filter(p => p.id !== id))
+
   const handleLikeToggle = async (id) => {
-  try {
-    const updatedPost = await feedApi.toggleLike(id)
-    setPosts(prev => prev.map(p =>
-      p.id === id ? { ...p, likes_count: updatedPost.likes_count } : p
-    ))
-  } catch {
-    toast.error('Could not like post')
+    try {
+      const updatedPost = await feedApi.toggleLike(id)
+      setPosts(prev => prev.map(p =>
+        p.id === id
+          ? { ...p, likes_count: updatedPost.likes_count, liked_by_me: updatedPost.liked_by_me }
+          : p
+      ))
+    } catch {
+      toast.error('Could not like post')
+    }
   }
-}
 
   const filtered = activeTag === 'all' ? posts : posts.filter(p => p.tag === activeTag)
 
@@ -52,7 +56,9 @@ export default function FeedPage() {
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-xl font-semibold text-[var(--text-primary)]">Community Feed</h1>
-          <span className="text-sm text-[var(--text-muted)]">{posts.length} post{posts.length !== 1 ? 's' : ''}</span>
+          <span className="text-sm text-[var(--text-muted)]">
+            {posts.length} post{posts.length !== 1 ? 's' : ''}
+          </span>
         </div>
 
         <PostForm onCreated={handleCreated} />
@@ -78,7 +84,7 @@ export default function FeedPage() {
 
         {loading && (
           <div className="flex flex-col gap-3">
-            {[1,2,3].map(i => <SkeletonCard key={i} lines={3} />)}
+            {[1, 2, 3].map(i => <SkeletonCard key={i} lines={3} />)}
           </div>
         )}
 

@@ -56,7 +56,7 @@ export default function CommentList({ postId, comments: initial = [], onCommentA
       <div className="flex flex-col gap-3">
         {comments.map((c, i) => (
           <div key={c.id ?? i} className="flex gap-3 animate-fade-in">
-            <Avatar name={getName(c)} size="xs" />
+            <Avatar name={getName(c)} src={c?.user?.profile_picture_url} size="xs" />
             <div className="flex-1">
               <div className="rounded-xl px-3 py-2.5" style={{ background: 'var(--bg-subtle)' }}>
                 <p className="text-xs font-semibold text-[var(--text-primary)] mb-0.5">
@@ -78,7 +78,7 @@ export default function CommentList({ postId, comments: initial = [], onCommentA
 
       {user && (
         <div className="flex gap-3 items-start pt-2 border-t" style={{ borderColor: 'var(--border)' }}>
-          <Avatar name={user.full_name} size="xs" />
+          <Avatar name={user.full_name} src={user.profile_picture_url} size="xs" />
           <div className="flex-1 flex gap-2">
             <input
               type="text"

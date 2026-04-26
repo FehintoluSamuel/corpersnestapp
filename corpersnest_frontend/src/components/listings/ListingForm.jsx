@@ -3,6 +3,7 @@ import { LGA_OPTIONS } from '@/lib/utils'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Select from '@/components/ui/Select'
+import ImageUpload from '@/components/ui/ImageUpload'
 
 const DEFAULTS = {
   title: '', address: '', lga: '', description: '',
@@ -107,14 +108,13 @@ export default function ListingForm({ initial = {}, onSubmit, loading = false, s
         {errors.description && <p className="text-xs text-red-500">{errors.description}</p>}
       </div>
 
-      {/* Image URL — placeholder until Cloudinary endpoint is ready */}
-      <Input
-        label="Photo URL (optional)"
-        placeholder="https://... — image upload coming soon"
-        value={form.image_url}
-        onChange={set('image_url')}
-        hint="Paste a direct image link for now. Full upload support coming soon."
-      />
+      {/* Image URL — placeholder with Cloudinary endpoint for now */}
+      {/* Image upload */}
+<ImageUpload
+  label="Photo (optional)"
+  value={form.image_url}
+  onChange={(url) => setForm(prev => ({ ...prev, image_url: url }))}
+/>
 
       <Button onClick={handleSubmit} loading={loading} size="lg" fullWidth>
         {submitLabel}

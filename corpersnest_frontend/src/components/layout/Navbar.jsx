@@ -34,7 +34,7 @@ export default function Navbar() {
             </svg>
           </div>
           <span className="font-semibold text-base">
-            <span style={{ color: 'var(--brand)' }}>Corper</span>
+            <span style={{ color: 'var(--brand)' }}>Corpers</span>
             <span style={{ color: 'var(--text-primary)' }}>Nest</span>
           </span>
         </Link>
@@ -100,7 +100,7 @@ export default function Navbar() {
   </nav>
 )}
         <div className="flex items-center gap-2 ml-auto">
-          
+
           {/* Theme toggle */}
           <button
             onClick={toggle}
@@ -130,7 +130,7 @@ export default function Navbar() {
           {user ? (
             <div className="flex items-center gap-2">
               <Link to="/profile">
-                <Avatar name={user.full_name} size="sm" />
+                <Avatar name={user.full_name} src={user.profile_picture_url} size="sm" />
               </Link>
               <button
                 onClick={handleLogout}

@@ -1,4 +1,3 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from '@/context/AuthContext'
 import { ThemeProvider } from '@/context/ThemeContext'
 import { ToastProvider } from '@/context/ToastContext'
@@ -20,6 +19,7 @@ import ProfilePage from '@/pages/profile/ProfilePage'
 import NotFoundPage from '@/pages/NotFound'
 import HomePage from '@/pages/Home'
 import { useAuth } from '@/context/AuthContext'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 
 function RootRedirect() {
   const { user, loading } = useAuth()

@@ -1,14 +1,19 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { useNavigate, Link } from 'react-router-dom'
-import { listingsApi } from '@/lib/api'
+import { listingsApi, authApi } from '@/lib/api'
 import { roleBadgeLabel, formatDate } from '@/lib/utils'
 import PageWrapper from '@/components/layout/PageWrapper'
 import Avatar from '@/components/ui/Avatar'
 import Button from '@/components/ui/Button'
+import Spinner from '@/components/ui/Spinner'
 import ListingCard from '@/components/listings/ListingCard'
 import SkeletonCard from '@/components/ui/SkeletonCard'
 import EmptyState from '@/components/ui/EmptyState'
+import { useToast } from '@/context/ToastContext'
+
+const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
+const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
 
 const InfoRow = ({ icon, label, value }) => (
   <div
@@ -62,14 +67,22 @@ const icons = {
       <path d="M7 1v12M1 7h12" strokeLinecap="round"/>
     </svg>
   ),
+  camera: (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+      <circle cx="12" cy="13" r="4"/>
+    </svg>
+  ),
 }
 
 export default function ProfilePage() {
-  const { user, logout } = useAuth()
+  const { user, logout, updateUser } = useAuth()
+  const toast = useToast()
   const navigate = useNavigate()
   const [myListings, setMyListings] = useState([])
   const [listingsLoading, setListingsLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('info')
+  const [avatarLoading, setAvatarLoading] = useState(false)
 
   const canPost = user?.role === 'outgoing_corper' || user?.role === 'landlord'
 
@@ -84,6 +97,46 @@ export default function ProfilePage() {
   }, [activeTab])
 
   const handleLogout = () => { logout(); navigate('/') }
+
+  const handleAvatarChange = async (file) => {
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be smaller than 5MB')
+      return
+    }
+
+    setAvatarLoading(true)
+    try {
+      // Upload directly to Cloudinary
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('upload_preset', UPLOAD_PRESET)
+      formData.append('folder', 'corpersnest/avatars')
+
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+        { method: 'POST', body: formData }
+      )
+      if (!res.ok) throw new Error('Upload failed')
+      const data = await res.json()
+      const cloudUrl = data.secure_url
+
+      // Save URL to backend
+      const updated = await authApi.updateAvatar(cloudUrl)
+
+      // Update global user state so navbar avatar updates immediately
+      updateUser({ profile_picture_url: updated.profile_picture_url })
+      toast.success('Profile picture updated')
+    } catch (err) {
+      toast.error('Could not update profile picture')
+    } finally {
+      setAvatarLoading(false)
+    }
+  }
 
   if (!user) return null
 
@@ -101,7 +154,47 @@ export default function ProfilePage() {
         {/* Profile header */}
         <div className="card p-5 mb-4">
           <div className="flex items-center gap-4 mb-4">
-            <Avatar name={user.full_name} size="lg" />
+
+            {/* Avatar with upload overlay */}
+            <div className="relative shrink-0">
+              <Avatar
+                name={user.full_name}
+                src={user.profile_picture_url}
+                size="lg"
+              />
+
+              {/* Camera overlay — hover to reveal */}
+              <label
+                className="absolute inset-0 rounded-full flex items-center justify-center cursor-pointer transition-opacity"
+                style={{
+                  background: avatarLoading ? 'rgba(0,0,0,0.5)' : 'transparent',
+                }}
+                onMouseEnter={e => {
+                  if (!avatarLoading) e.currentTarget.style.background = 'rgba(0,0,0,0.45)'
+                }}
+                onMouseLeave={e => {
+                  if (!avatarLoading) e.currentTarget.style.background = 'transparent'
+                }}
+                title="Change profile photo"
+              >
+                {avatarLoading ? (
+                  <Spinner size="sm" />
+                ) : (
+                  <span className="opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center w-full h-full rounded-full"
+                    style={{ background: 'rgba(0,0,0,0.45)' }}>
+                    {icons.camera}
+                  </span>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={avatarLoading}
+                  onChange={(e) => handleAvatarChange(e.target.files[0])}
+                />
+              </label>
+            </div>
+
             <div className="flex-1">
               <h1 className="font-semibold text-lg text-[var(--text-primary)] leading-tight">
                 {user.full_name}
@@ -109,6 +202,9 @@ export default function ProfilePage() {
               <span className="tag tag-tip text-xs mt-1 inline-block">
                 {roleBadgeLabel(user.role)}
               </span>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                Tap photo to change
+              </p>
             </div>
           </div>
 

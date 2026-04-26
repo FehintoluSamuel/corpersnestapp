@@ -10,6 +10,7 @@ const TAG_LABELS = {
   question: 'Question',
   tip: 'Tip',
   room_available: 'Room available',
+  roommate_needed: 'Roommate needed',
   scam_warning: 'Scam warning',
   general: 'General',
 }
@@ -23,16 +24,16 @@ export default function PostCard({ post, onDelete, onLikeToggle }) {
   const isOwner = user && post.user?.id === user.id
 
   const handleLike = async (e) => {
-  e.preventDefault()
-  if (!user) { toast.info('Log in to like posts'); return }
-  if (liking) return
-  setLiking(true)
-  try {
-    await onLikeToggle?.(post.id)
-  } finally {
-    setLiking(false)
+    e.preventDefault()
+    if (!user) { toast.info('Log in to like posts'); return }
+    if (liking) return
+    setLiking(true)
+    try {
+      await onLikeToggle?.(post.id)
+    } finally {
+      setLiking(false)
+    }
   }
-}
 
   const handleDelete = async (e) => {
     e.preventDefault()
@@ -53,7 +54,7 @@ export default function PostCard({ post, onDelete, onLikeToggle }) {
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-2.5">
-          <Avatar name={post.user?.full_name} size="sm" />
+          <Avatar name={post.user?.full_name} src={post.user?.profile_picture_url} size="sm" />
           <div>
             <p className="text-sm font-semibold text-[var(--text-primary)] leading-none mb-0.5">
               {post.user?.full_name}
@@ -88,11 +89,16 @@ export default function PostCard({ post, onDelete, onLikeToggle }) {
         <button
           onClick={handleLike}
           disabled={liking}
-          className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] hover:text-red-500 transition-colors group"
+          className="flex items-center gap-1.5 text-xs transition-colors group"
+          style={{ color: post.liked_by_me ? '#EF4444' : 'var(--text-muted)' }}
         >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
-            className="group-hover:scale-110 transition-transform">
+          <svg
+            width="15" height="15" viewBox="0 0 24 24"
+            fill={post.liked_by_me ? 'currentColor' : 'none'}
+            stroke="currentColor" strokeWidth="1.8"
+            strokeLinecap="round" strokeLinejoin="round"
+            className="group-hover:scale-110 transition-transform"
+          >
             <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
           </svg>
           {post.likes_count ?? 0}

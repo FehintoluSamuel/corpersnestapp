@@ -8,7 +8,6 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  // On mount, if token exists, fetch current user
   useEffect(() => {
     const token = getToken()
     if (token) {
@@ -20,7 +19,6 @@ export function AuthProvider({ children }) {
       setLoading(false)
     }
 
-    // Listen for token expiry fired from api.js
     const handleExpired = () => {
       setUser(null)
       clearToken()
@@ -29,27 +27,33 @@ export function AuthProvider({ children }) {
     return () => window.removeEventListener('auth:expired', handleExpired)
   }, [])
 
-const login = useCallback(async (email, password) => {
-  const data = await authApi.login({ email, password })
-  setToken(data.token)        // ← was data.access_token
-  setUser(data.user)
-  return data.user
-}, [])
+  const login = useCallback(async (email, password) => {
+    const data = await authApi.login({ email, password })
+    setToken(data.token)
+    setUser(data.user)
+    return data.user
+  }, [])
 
-const register = useCallback(async (body) => {
-  const data = await authApi.register(body)
-  setToken(data.token)        // ← was data.access_token
-  setUser(data.user)
-  return data.user
-}, [])
+  const register = useCallback(async (body) => {
+    const data = await authApi.register(body)
+    setToken(data.token)
+    setUser(data.user)
+    return data.user
+  }, [])
 
   const logout = useCallback(() => {
     clearToken()
     setUser(null)
   }, [])
 
+  // Merges partial updates into the current user object
+  // Used after avatar upload so the navbar updates immediately
+  const updateUser = useCallback((updatedFields) => {
+    setUser(prev => ({ ...prev, ...updatedFields }))
+  }, [])
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   )

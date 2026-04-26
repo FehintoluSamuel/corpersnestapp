@@ -11,7 +11,7 @@ import Spinner from '@/components/ui/Spinner'
 import Button from '@/components/ui/Button'
 
 const TAG_LABELS = {
-  question: 'Question', tip: 'Tip', room_available: 'Room available',
+  question: 'Question', tip: 'Tip', room_available: 'Room available', roommate_needed: 'Roommate needed',
   scam_warning: 'Scam warning', general: 'General',
 }
 
@@ -31,7 +31,7 @@ export default function PostDetail() {
       .finally(() => setLoading(false))
   }, [postId])
 
-  
+
   const handleLike = async () => {
   if (!user) { toast.info('Log in to like posts'); return }
   if (liking) return

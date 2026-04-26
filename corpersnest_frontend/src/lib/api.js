@@ -39,8 +39,11 @@ export const authApi = {
   register: (body) => request('/auth/registration', { method: 'POST', body: JSON.stringify(body) }),
   login: (body) => request('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
   me: () => request('/auth/me'),
+  updateAvatar: (url) => request('/auth/me/avatar', {
+    method: 'PATCH',
+    body: JSON.stringify({ profile_picture_url: url }),
+  }),
 }
-
 // ─── Listings ────────────────────────────────────────────
 export const listingsApi = {
   getAll: (filters = {}) => {
@@ -66,3 +69,4 @@ export const feedApi = {
   addComment: (postId, body) => request(`/feed/${postId}/comments`, { method: 'POST', body: JSON.stringify(body) }),
   toggleLike: (postId) => request(`/feed/${postId}/like`, { method: 'POST' }),
 }
+

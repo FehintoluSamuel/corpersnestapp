@@ -55,14 +55,14 @@ export default function LoginPage() {
           </svg>
         </div>
         <span className="font-semibold text-lg">
-          <span style={{ color: 'var(--brand)' }}>Corper</span>
+          <span style={{ color: 'var(--brand)' }}>Corpers</span>
           <span style={{ color: 'var(--text-primary)' }}>Nest</span>
         </span>
       </Link>
 
       <div className="card p-6 w-full max-w-md animate-slide-up">
         <h1 className="text-2xl font-semibold text-[var(--text-primary)] mb-1">Welcome back</h1>
-        <p className="text-sm text-[var(--text-muted)] mb-6">Log in to your CorperNest account</p>
+        <p className="text-sm text-[var(--text-muted)] mb-6">Log in to your CorpersNest account</p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <Input
@@ -92,7 +92,7 @@ export default function LoginPage() {
         <p className="text-center text-sm text-[var(--text-muted)] mt-5">
           Don't have an account?{' '}
           <Link to="/register" className="text-[var(--brand)] font-medium hover:underline">
-            Join CorperNest
+            Join CorpersNest
           </Link>
         </p>
       </div>

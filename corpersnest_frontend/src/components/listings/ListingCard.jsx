@@ -14,7 +14,7 @@ const STATUS_STYLES = {
 }
 
 export default function ListingCard({ listing }) {
-  const { id, title, address, lga, price_monthly, bedrooms, listing_type, status, owner, created_at, available_from } = listing
+  const { id, title, address, lga, price_monthly, bedrooms, listing_type, status, owner, created_at, available_from, image_url } = listing
 
   return (
     <Link
@@ -22,37 +22,47 @@ export default function ListingCard({ listing }) {
       className="card block hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 transition-all duration-200 overflow-hidden group"
     >
 
-      {/* Image placeholder */}
-<div className="h-40 w-full relative overflow-hidden flex items-center justify-center"
-  style={{ background: 'var(--bg-subtle)' }}>
-  {/* Subtle grid pattern */}
-  <svg width="100%" height="100%" style={{ position: 'absolute', opacity: 0.4 }}>
-    <defs>
-      <pattern id={`grid-${id}`} width="20" height="20" patternUnits="userSpaceOnUse">
-        <path d="M 20 0 L 0 0 0 20" fill="none" stroke="var(--border)" strokeWidth="0.5"/>
-      </pattern>
-    </defs>
-    <rect width="100%" height="100%" fill={`url(#grid-${id})`}/>
-  </svg>
-  {/* House icon */}
-  <div className="relative flex flex-col items-center gap-1">
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
-      stroke="var(--border-strong)" strokeWidth="1.2" strokeLinecap="round">
-      <path d="M3 9L12 2L21 9V21H15V14H9V21H3V9Z"/>
-    </svg>
-    <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
-      No photo yet
-    </span>
-  </div>
-  
-  {/* Badges */}
-  <span className={`tag absolute top-3 left-3 capitalize ${STATUS_STYLES[status] || ''}`}>
-    {status}
-  </span>
-  <span className={`tag absolute top-3 right-3 ${listing_type === 'corper_room' ? 'badge-corper' : 'badge-landlord'}`}>
-    {TYPE_LABELS[listing_type]}
-  </span>
-</div>
+      {/* Image / placeholder */}
+      <div className="h-40 w-full relative overflow-hidden flex items-center justify-center"
+        style={{ background: 'var(--bg-subtle)' }}>
+
+        {image_url ? (
+          <img
+            src={image_url}
+            alt={title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+        ) : (
+          <>
+            {/* Subtle grid pattern */}
+            <svg width="100%" height="100%" style={{ position: 'absolute', opacity: 0.4 }}>
+              <defs>
+                <pattern id={`grid-${id}`} width="20" height="20" patternUnits="userSpaceOnUse">
+                  <path d="M 20 0 L 0 0 0 20" fill="none" stroke="var(--border)" strokeWidth="0.5"/>
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill={`url(#grid-${id})`}/>
+            </svg>
+            <div className="relative flex flex-col items-center gap-1">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                stroke="var(--border-strong)" strokeWidth="1.2" strokeLinecap="round">
+                <path d="M3 9L12 2L21 9V21H15V14H9V21H3V9Z"/>
+              </svg>
+              <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+                No photo yet
+              </span>
+            </div>
+          </>
+        )}
+
+        {/* Badges always visible */}
+        <span className={`tag absolute top-3 left-3 capitalize ${STATUS_STYLES[status] || ''}`}>
+          {status}
+        </span>
+        <span className={`tag absolute top-3 right-3 ${listing_type === 'corper_room' ? 'badge-corper' : 'badge-landlord'}`}>
+          {TYPE_LABELS[listing_type]}
+        </span>
+      </div>
 
       <div className="p-4">
         <h3 className="font-semibold text-[var(--text-primary)] text-sm leading-snug mb-1 group-hover:text-[var(--brand)] transition-colors line-clamp-2">

@@ -22,7 +22,7 @@ export default function LandingPage() {
         </div>
 
         <h1 className="text-4xl md:text-5xl font-semibold tracking-tight mb-3">
-          <span style={{ color: 'var(--brand)' }}>Corper</span>
+          <span style={{ color: 'var(--brand)' }}>Corpers</span>
           <span style={{ color: 'var(--text-primary)' }}>Nest</span>
         </h1>
         <p className="text-lg md:text-xl text-[var(--text-secondary)] max-w-md mb-2">
@@ -94,7 +94,7 @@ export default function LandingPage() {
       </div>
 
       <footer className="text-center py-6 text-xs text-[var(--text-muted)] border-t" style={{ borderColor: 'var(--border)' }}>
-        CorperNest · Built for Abia State corps members · {new Date().getFullYear()}
+        CorpersNest · Built for Abia State corps members · {new Date().getFullYear()}
       </footer>
     </div>
   )

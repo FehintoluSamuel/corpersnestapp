@@ -54,7 +54,7 @@ export default function HomePage() {
               : 'Find your perfect room in Abia State.'}
           </p>
         </div>
-        <Avatar name={user?.full_name} size="md" />
+        <Avatar name={user?.full_name} src={user?.profile_picture_url} size="xs" />
       </div>
 
       {/* Quick actions */}
@@ -193,7 +193,7 @@ export default function HomePage() {
                 className="card p-4 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 transition-all duration-200 block"
               >
                 <div className="flex items-center gap-2.5 mb-2">
-                  <Avatar name={post.user?.full_name} size="xs" />
+                  <Avatar name={post.user?.full_name} src={post.user?.profile_picture_url} size="xs" />
                   <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
                     {post.user?.full_name}
                   </span>

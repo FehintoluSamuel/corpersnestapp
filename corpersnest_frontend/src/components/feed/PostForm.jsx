@@ -4,6 +4,9 @@ import { useAuth } from '@/context/AuthContext'
 import { useToast } from '@/context/ToastContext'
 import Avatar from '@/components/ui/Avatar'
 import Button from '@/components/ui/Button'
+import ImageUpload from '@/components/ui/ImageUpload'
+
+
 
 const TAGS = [
   {
@@ -144,13 +147,13 @@ export default function PostForm({ onCreated }) {
 ))}
 
           {/* Optional image URL */}
-          <input
-            type="url"
-            placeholder="Image URL (optional)"
-            value={imageUrl}
-            onChange={e => setImageUrl(e.target.value)}
-            className="input-base text-sm ml-11"
-          />
+          <div className="ml-11">
+            <ImageUpload
+              label=""
+              value={imageUrl}
+              onChange={(url) => setImageUrl(url)}
+             />
+          </div>
 
           <div className="flex justify-end gap-2 pl-11">
             <Button variant="ghost" size="sm" onClick={() => { setOpen(false); setContent(''); }}>
