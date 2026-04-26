@@ -29,6 +29,7 @@ class UserResponse(BaseModel):
     role: Role
     status: Status
     created_at: Optional[datetime]=None
+    profile_picture_url: Optional[str] = None
     
     class Config:
         from_attributes = True
@@ -38,6 +39,7 @@ class AuthResponse(BaseModel):
     token: str
     user: UserResponse
     
-    
-
+#Schema for ProfilePicture Response    
+class UpdateAvatarRequest(BaseModel):
+    profile_picture_url: str
 

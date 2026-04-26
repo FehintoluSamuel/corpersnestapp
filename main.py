@@ -10,7 +10,7 @@ app = FastAPI(title='CorpersNest Api', version='1.0.0')
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["http://localhost:5173","http://192.168.0.100:5173"],
     allow_credentials=True,
     allow_headers=["*"],
     allow_methods=["*"]

@@ -58,7 +58,8 @@ async def create_listing(
         bedrooms=data.bedrooms,
         description=data.description,
         listing_type=data.listing_type,
-        available_from=data.available_from
+        available_from=data.available_from,
+        image_url=data.image_url
     )
     db.add(new_listing)
     db.commit()
@@ -102,6 +103,9 @@ async def update_listing(
         listing.available_from = data.available_from
     if data.status:
         listing.status = data.status
+    if data.image_url:
+        listing.image_url = data.image_url
+        
     
     db.commit()
     db.refresh(listing)

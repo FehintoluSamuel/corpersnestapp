@@ -15,8 +15,8 @@ class User(Base):
     batch_stream = Column(String(50), nullable=True)
     role = Column(Enum(Role), index=True, nullable=False, default=Role.incoming_corper)
     status = Column(Enum(Status), index=True, nullable=False, default=Status.active)
+    profile_picture_url = Column(String(500), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    
     listings = relationship('Listing', back_populates='owner')
     posts = relationship('Post', back_populates='user')
     comments = relationship('Comment', back_populates='user')
@@ -34,8 +34,8 @@ class Listing(Base):
     listing_type = Column(Enum(ListingType), index=True, nullable=False)
     status = Column(Enum(ListingStatus), index=True, nullable=False, default=ListingStatus.active)
     available_from = Column(Date, nullable=False)
+    image_url = Column(String(500), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    
     owner = relationship('User', back_populates='listings')
 
 class Post(Base):

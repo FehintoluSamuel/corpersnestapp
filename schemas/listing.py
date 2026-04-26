@@ -20,19 +20,20 @@ class ListingCreateRequest(BaseModel):
     description : Optional[str]= None
     listing_type : ListingType
     available_from : date
+    image_url: Optional[str] = None
     
 #listing field validation for client PATCH request
 class ListingUpdateRequest(BaseModel):
-    title : Optional[str]= None
-    address : Optional[str]= None
-    lga : Optional[str]= None
-    price_monthly : Optional[float]= None
-    bedrooms : Optional[int]= None
-    description : Optional[str]= None
-    listing_type : Optional[ListingType]= None
-    available_from : Optional[date]= None
-    status : Optional[ListingStatus]= None
-    
+    title: Optional[str] = None
+    address: Optional[str] = None
+    lga: Optional[str] = None
+    price_monthly: Optional[float] = None
+    bedrooms: Optional[int] = None
+    description: Optional[str] = None
+    listing_type: Optional[str] = None
+    available_from: Optional[date] = None
+    status: Optional[str] = None
+    image_url: Optional[str] = None  
     
 
 #listing field validation for Listing response
@@ -47,6 +48,7 @@ class ListingResponse(BaseModel):
     description: Optional[str] = None
     listing_type: ListingType
     available_from: date
+    image_url: Optional[str] = None
     status: ListingStatus
     created_at: datetime
     owner: OwnerResponse

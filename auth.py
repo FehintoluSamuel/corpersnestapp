@@ -9,6 +9,9 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models.database_model import User
 from pathlib import Path
+from fastapi.security import OAuth2PasswordBearer
+from fastapi import Request
+from typing import Optional
 
 ctxt=CryptContext(schemes=['bcrypt'], deprecated='auto')
 
@@ -72,8 +75,21 @@ def get_current_user(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='user not found')
     return user
 
-
-
+async def get_current_user_optional(
+    db: Session = Depends(get_db),
+    token: Optional[str] = Depends(OAuth2PasswordBearer(tokenUrl="token", auto_error=False))
+) -> Optional[User]:
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        sub = payload.get('sub')
+        if not sub:
+            return None
+        user = db.query(User).filter(User.id == int(sub)).first()
+        return user
+    except Exception:
+        return None
 
 
 

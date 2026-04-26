@@ -12,17 +12,29 @@ from schemas.feed import (
 )
 from auth import get_current_user
 from typing import List, Optional
+from typing import Optional
+from auth import get_current_user_optional 
 
 router = APIRouter(prefix='/feed', tags=['Community Feed'])
 
 # GET all posts
 @router.get('/', response_model=List[PostResponse], status_code=200)
-async def get_feed(db: Session = Depends(get_db)):
+async def get_feed(
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
+):
     posts = db.query(Post).order_by(desc(Post.created_at)).all()
     for post in posts:
-        post.comments_count = len(post.comments)
-        # Recount likes from PostLike table to stay in sync
-        post.likes_count = db.query(PostLike).filter(PostLike.post_id == post.id).count()
+        post.__dict__['comments_count'] = len(post.comments)
+        post.__dict__['likes_count'] = db.query(PostLike).filter(PostLike.post_id == post.id).count()
+        # Check if current user liked this post
+        if current_user:
+            post.__dict__['liked_by_me'] = db.query(PostLike).filter(
+                PostLike.post_id == post.id,
+                PostLike.user_id == current_user.id
+            ).first() is not None
+        else:
+            post.__dict__['liked_by_me'] = False
     return posts
 
 
@@ -106,19 +118,16 @@ async def toggle_like(
 
     if existing_like:
         db.delete(existing_like)
+        liked = False
     else:
-        new_like = PostLike(post_id=post_id, user_id=current_user.id)
-        db.add(new_like)
+        db.add(PostLike(post_id=post_id, user_id=current_user.id))
+        liked = True
 
-    db.commit()
-
-    # Always recount from PostLike table — never trust the stored number
-    post.likes_count = db.query(PostLike).filter(PostLike.post_id == post_id).count()
-    db.add(post)
     db.commit()
     db.refresh(post)
+    post.__dict__['likes_count'] = db.query(PostLike).filter(PostLike.post_id == post_id).count()
+    post.__dict__['liked_by_me'] = liked
     return post
-
 
     
 # DELETE own post

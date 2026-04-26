@@ -4,6 +4,7 @@ from database import get_db
 from models.database_model import User
 from schemas.auth import RegisterRequest, LoginRequest, AuthResponse, UserResponse
 from auth import hash_password, verify_password, create_token, get_current_user
+from schemas.auth import UpdateAvatarRequest
 
 
 
@@ -89,7 +90,16 @@ async def get_profile(current_user: User=Depends(get_current_user)):
 
 
 
-
+@router.patch('/me/avatar', response_model=UserResponse, status_code=200)
+async def update_avatar(
+    data: UpdateAvatarRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    current_user.profile_picture_url = data.profile_picture_url
+    db.commit()
+    db.refresh(current_user)
+    return current_user
 
 
 

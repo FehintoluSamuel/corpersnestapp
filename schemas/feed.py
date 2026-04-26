@@ -7,6 +7,7 @@ class UserResponse(BaseModel):
     id: int
     full_name: str
     role: Role
+    profile_picture_url: Optional[str] = None   
 
     class Config:
         from_attributes = True
@@ -16,6 +17,7 @@ class CommentResponse(BaseModel):
     content: str
     created_at: datetime
     user: UserResponse
+    profile_picture_url: Optional[str] = None 
 
     class Config:
         from_attributes = True
@@ -35,6 +37,7 @@ class PostResponse(BaseModel):
     image_url: Optional[str] = None
     likes_count: int
     comments_count: int = 0
+    liked_by_me: bool = False
     created_at: datetime
     user: UserResponse
 
