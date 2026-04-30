@@ -1,40 +1,45 @@
+/**
+ * components/listings/ListingCard.jsx
+ */
+
 import { Link } from 'react-router-dom'
+import { useAuth } from '@/context/AuthContext'
 import { formatPrice, formatDate } from '@/lib/utils'
 import Avatar from '@/components/ui/Avatar'
+import RoleBadge from '@/components/ui/RoleBadge'
+import { WhatsAppIconButton } from '@/components/ui/WhatsAppButton'
 
 const TYPE_LABELS = {
-  corper_room: 'Corper Room',
+  corper_room:       'Corper Room',
   landlord_property: 'Landlord Property',
 }
 
 const STATUS_STYLES = {
-  active: 'badge-active',
-  taken: 'badge-taken',
+  active:   'badge-active',
+  taken:    'badge-taken',
   inactive: 'badge-inactive',
 }
 
 export default function ListingCard({ listing }) {
-  const { id, title, address, lga, price_monthly, bedrooms, listing_type, status, owner, created_at, available_from, image_url } = listing
+  const { user } = useAuth()
+  const {
+    id, title, address, lga, price_monthly, bedrooms,
+    listing_type, status, owner, created_at, image_url,
+  } = listing
 
   return (
     <Link
       to={`/listings/${id}`}
       className="card block hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 transition-all duration-200 overflow-hidden group"
     >
-
       {/* Image / placeholder */}
       <div className="h-40 w-full relative overflow-hidden flex items-center justify-center"
         style={{ background: 'var(--bg-subtle)' }}>
-
         {image_url ? (
-          <img
-            src={image_url}
-            alt={title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
+          <img src={image_url} alt={title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
         ) : (
           <>
-            {/* Subtle grid pattern */}
             <svg width="100%" height="100%" style={{ position: 'absolute', opacity: 0.4 }}>
               <defs>
                 <pattern id={`grid-${id}`} width="20" height="20" patternUnits="userSpaceOnUse">
@@ -55,7 +60,6 @@ export default function ListingCard({ listing }) {
           </>
         )}
 
-        {/* Badges always visible */}
         <span className={`tag absolute top-3 left-3 capitalize ${STATUS_STYLES[status] || ''}`}>
           {status}
         </span>
@@ -64,37 +68,69 @@ export default function ListingCard({ listing }) {
         </span>
       </div>
 
+      {/* Body */}
       <div className="p-4">
-        <h3 className="font-semibold text-[var(--text-primary)] text-sm leading-snug mb-1 group-hover:text-[var(--brand)] transition-colors line-clamp-2">
+        <h3 className="font-semibold text-sm leading-snug mb-1 line-clamp-2 group-hover:text-[var(--brand)] transition-colors"
+          style={{ color: 'var(--text-primary)' }}>
           {title}
         </h3>
-        <p className="text-xs text-[var(--text-muted)] flex items-center gap-1 mb-3">
-          <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3">
-            <path d="M6 1a4 4 0 100 8A4 4 0 006 1zM6 11v.5"/>
-            <path d="M6 9v.5" strokeLinecap="round"/>
+
+        <p className="text-xs flex items-center gap-1 mb-3" style={{ color: 'var(--text-muted)' }}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+            <circle cx="12" cy="9" r="2.5"/>
           </svg>
           {address}, {lga}
         </p>
 
         <div className="flex items-end justify-between">
           <div>
-            <span className="text-base font-semibold text-[var(--brand)]">{formatPrice(price_monthly)}</span>
-            <span className="text-xs text-[var(--text-muted)]">/month</span>
+            <span className="text-base font-semibold text-[var(--brand)]">
+              {formatPrice(price_monthly)}
+            </span>
+            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>/month</span>
           </div>
-          <div className="flex items-center gap-1 text-xs text-[var(--text-muted)]">
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.3">
-              <rect x="1" y="4" width="10" height="7" rx="1"/>
-              <path d="M1 7h10M4 4V3a2 2 0 014 0v1"/>
+          <div className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-muted)' }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+              <path d="M3 22V8l9-6 9 6v14"/>
+              <path d="M9 22V12h6v10"/>
             </svg>
             {bedrooms} bed{bedrooms !== 1 ? 's' : ''}
           </div>
         </div>
 
+        {/* Owner row */}
         {owner && (
-          <div className="flex items-center gap-2 mt-3 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
-            <Avatar name={owner.full_name} size="xs" />
-            <span className="text-xs text-[var(--text-muted)] truncate">{owner.full_name}</span>
-            <span className="text-xs text-[var(--text-muted)] ml-auto shrink-0">{formatDate(created_at)}</span>
+          <div className="flex items-center gap-2 mt-3 pt-3 border-t"
+            style={{ borderColor: 'var(--border)' }}>
+            <Link
+              to={`/users/${owner.id}`}
+              onClick={e => e.stopPropagation()}
+              className="flex items-center gap-2 min-w-0 hover:opacity-80 transition-opacity"
+            >
+              <Avatar name={owner.full_name} src={owner.profile_picture_url} size="xs" />
+              <span className="text-xs font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+                {owner.full_name}
+              </span>
+            </Link>
+
+            {/* Role badge */}
+            <RoleBadge role={owner.role} />
+
+            <span className="text-xs ml-auto shrink-0" style={{ color: 'var(--text-muted)' }}>
+              {formatDate(created_at)}
+            </span>
+
+            {/* WhatsApp — logged-in users only */}
+            {user && owner.phone_no && (
+              <WhatsAppIconButton
+                phone={owner.phone_no}
+                ownerName={owner.full_name}
+                listingTitle={title}
+              />
+            )}
           </div>
         )}
       </div>

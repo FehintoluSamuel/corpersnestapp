@@ -1,29 +1,52 @@
+/**
+ * pages/Home.jsx
+ *
+ * Role-aware home page.
+ * - Shows NyscPromptBanner for PCMs and pending landlords
+ * - Welcome message adapts to role
+ * - Recent listings + community feed preview
+ */
+
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
-import { listingsApi } from '@/lib/api'
-import { feedApi } from '@/lib/api'
+import { listingsApi, feedApi } from '@/lib/api'
+import { formatDate } from '@/lib/utils'
 import PageWrapper from '@/components/layout/PageWrapper'
 import ListingCard from '@/components/listings/ListingCard'
 import SkeletonListingGrid from '@/components/ui/SkeletonListingGrid'
 import SkeletonCard from '@/components/ui/SkeletonCard'
 import Button from '@/components/ui/Button'
-import { formatDate } from '@/lib/utils'
 import Avatar from '@/components/ui/Avatar'
+import RoleBadge from '@/components/ui/RoleBadge'
+import NyscPromptBanner from '@/components/ui/NyscPromptBanner'
 
 const TAG_LABELS = {
   question: 'Question', tip: 'Tip', room_available: 'Room available',
   roommate_needed: 'Roommate needed', scam_warning: 'Scam warning', general: 'General',
 }
 
+function welcomeMessage(user) {
+  switch (user?.role) {
+    case 'pcm':             return 'Complete your NYSC profile to unlock full access.'
+    case 'incoming_corper': return 'Find your perfect room in Abia State.'
+    case 'outgoing_corper': return 'Ready to help the next set of corpers find a home?'
+    case 'alumni':          return 'Welcome back, alumni. Share your experience with current corpers.'
+    case 'landlord':        return 'Connect with corp members looking for accommodation.'
+    case 'admin':           return 'Platform overview and management.'
+    default:                return 'Welcome to CorpersNest.'
+  }
+}
+
 export default function HomePage() {
   const { user } = useAuth()
-  const [listings, setListings] = useState([])
-  const [posts, setPosts] = useState([])
+  const [listings,        setListings]        = useState([])
+  const [posts,           setPosts]           = useState([])
   const [listingsLoading, setListingsLoading] = useState(true)
-  const [postsLoading, setPostsLoading] = useState(true)
+  const [postsLoading,    setPostsLoading]    = useState(true)
 
-  const canPost = user?.role === 'outgoing_corper' || user?.role === 'landlord'
+  const canPost    = ['outgoing_corper', 'landlord', 'incoming_corper'].includes(user?.role)
+  const isAdmin    = user?.role === 'admin'
 
   useEffect(() => {
     listingsApi.getAll()
@@ -39,82 +62,56 @@ export default function HomePage() {
 
   return (
     <PageWrapper>
+
+      {/* NYSC / landlord status banner */}
+      <NyscPromptBanner user={user} />
+
       {/* Welcome banner */}
-      <div
-        className="rounded-2xl p-5 mb-6 flex items-center justify-between gap-4"
-        style={{ background: 'var(--brand-light)', border: '1px solid var(--brand)' }}
-      >
+      <div className="rounded-2xl p-5 mb-6 flex items-center justify-between gap-4"
+        style={{ background: 'var(--brand-light)', border: '1px solid var(--brand)' }}>
         <div>
           <h1 className="text-lg font-semibold mb-0.5" style={{ color: 'var(--brand-dark)' }}>
             Welcome back, {user?.full_name?.split(' ')[0]}
           </h1>
           <p className="text-sm" style={{ color: 'var(--brand)' }}>
-            {canPost
-              ? 'Ready to help the next set of corpers find a home?'
-              : 'Find your perfect room in Abia State.'}
+            {welcomeMessage(user)}
           </p>
+          <div className="mt-2">
+            <RoleBadge role={user?.role} />
+          </div>
         </div>
-        <Avatar name={user?.full_name} src={user?.profile_picture_url} size="xs" />
+        <Avatar name={user?.full_name} src={user?.profile_picture_url} size="md" />
       </div>
 
       {/* Quick actions */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
         {[
           {
-            to: '/listings',
-            label: 'Browse rooms',
-            icon: (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
-                <rect x="3" y="3" width="7" height="7" rx="1"/>
-                <rect x="14" y="3" width="7" height="7" rx="1"/>
-                <rect x="3" y="14" width="7" height="7" rx="1"/>
-                <rect x="14" y="14" width="7" height="7" rx="1"/>
-              </svg>
-            ),
+            to: '/listings', label: 'Browse rooms',
+            icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
           },
           {
-            to: '/feed',
-            label: 'Community feed',
-            icon: (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
-                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-              </svg>
-            ),
+            to: '/feed', label: 'Community feed',
+            icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>,
           },
           ...(canPost ? [{
-            to: '/listings/new',
-            label: 'Post a room',
-            icon: (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
-                <path d="M3 9L12 2L21 9V21H15V14H9V21H3V9Z"/>
-                <line x1="12" y1="11" x2="12" y2="17"/>
-                <line x1="9" y1="14" x2="15" y2="14"/>
-              </svg>
-            ),
+            to: '/listings/new', label: 'Post a room',
+            icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M3 9L12 2L21 9V21H15V14H9V21H3V9Z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>,
+          }] : []),
+          ...(isAdmin ? [{
+            to: '/admin', label: 'Admin panel',
+            icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>,
           }] : []),
           {
-            to: '/profile',
-            label: 'My profile',
-            icon: (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
-                <circle cx="12" cy="8" r="4"/>
-                <path d="M4 20C4 17 7.6 14 12 14C16.4 14 20 17 20 20"/>
-              </svg>
-            ),
+            to: '/profile', label: 'My profile',
+            icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20C4 17 7.6 14 12 14C16.4 14 20 17 20 20"/></svg>,
           },
         ].map(({ to, label, icon }) => (
-          <Link
-            key={to}
-            to={to}
-            className="card p-4 flex flex-col items-center gap-2 text-center hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 transition-all duration-200 group"
-          >
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center transition-colors group-hover:bg-[var(--brand-light)]"
-              style={{ background: 'var(--bg-subtle)', color: 'var(--text-muted)' }}
-            >
-              <span className="group-hover:text-[var(--brand)] transition-colors">
-                {icon}
-              </span>
+          <Link key={to} to={to}
+            className="card p-4 flex flex-col items-center gap-2 text-center hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 transition-all duration-200 group">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center transition-colors group-hover:bg-[var(--brand-light)]"
+              style={{ background: 'var(--bg-subtle)', color: 'var(--text-muted)' }}>
+              <span className="group-hover:text-[var(--brand)] transition-colors">{icon}</span>
             </div>
             <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
               {label}
@@ -156,7 +153,7 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* Recent feed posts */}
+      {/* Community feed preview */}
       <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>
@@ -187,24 +184,23 @@ export default function HomePage() {
         {!postsLoading && posts.length > 0 && (
           <div className="flex flex-col gap-3">
             {posts.map(post => (
-              <Link
-                key={post.id}
-                to={`/feed/${post.id}`}
-                className="card p-4 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 transition-all duration-200 block"
-              >
+              <Link key={post.id} to={`/feed/${post.id}`}
+                className="card p-4 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 transition-all duration-200 block">
                 <div className="flex items-center gap-2.5 mb-2">
                   <Avatar name={post.user?.full_name} src={post.user?.profile_picture_url} size="xs" />
-                  <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
+                  <Link to={`/users/${post.user?.id}`}
+                    onClick={e => e.stopPropagation()}
+                    className="text-xs font-medium hover:underline"
+                    style={{ color: 'var(--text-primary)' }}>
                     {post.user?.full_name}
-                  </span>
-                  <span
-                    className={`tag tag-${post.tag} ml-auto`}
-                    style={{ fontSize: '10px', padding: '2px 8px' }}
-                  >
+                  </Link>
+                  <span className={`tag tag-${post.tag} ml-auto`}
+                    style={{ fontSize: '10px', padding: '2px 8px' }}>
                     {TAG_LABELS[post.tag] || post.tag}
                   </span>
                 </div>
-                <p className="text-sm leading-relaxed line-clamp-2" style={{ color: 'var(--text-secondary)' }}>
+                <p className="text-sm leading-relaxed line-clamp-2"
+                  style={{ color: 'var(--text-secondary)' }}>
                   {post.content}
                 </p>
                 <div className="flex items-center gap-3 mt-2">
