@@ -42,6 +42,11 @@ import AdminReports          from '@/pages/admin/AdminReports'
 import NotFoundPage from '@/pages/NotFound'
 
 
+// Connections and Messages
+import ConnectionsPage    from '@/pages/connections/ConnectionsPage'
+import MessagesPage       from '@/pages/messages/MessagesPage'
+import ConversationPage   from '@/pages/messages/ConversationPage'
+
 function RootRedirect() {
   const { user, loading } = useAuth()
   if (loading) return null
@@ -109,6 +114,13 @@ export default function App() {
 
                   {/* ── Fallback ── */}
                   <Route path="*" element={<NotFoundPage />} />
+
+                  {/* ── Connections and Messages ── */}
+                  <Route path="/connections" element={<ProtectedRoute><ConnectionsPage /></ProtectedRoute>} />
+                  <Route path="/messages"    element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
+                  <Route path="/messages/:userId" element={<ProtectedRoute><ConversationPage /></ProtectedRoute>} />
+ 
+
 
                 </Routes>
               </div>

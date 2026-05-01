@@ -72,12 +72,13 @@ export const listingsApi = {
 // ─── Feed ─────────────────────────────────────────────────────────────────────
 
 export const feedApi = {
-  getAll:      ()              => request('/feed'),
-  getOne:      (postId)        => request(`/feed/${postId}`),
-  create:      (body)          => request('/feed', { method: 'POST', body: JSON.stringify(body) }),
-  delete:      (postId)        => request(`/feed/${postId}`, { method: 'DELETE' }),
-  addComment:  (postId, body)  => request(`/feed/${postId}/comments`, { method: 'POST', body: JSON.stringify(body) }),
-  toggleLike:  (postId)        => request(`/feed/${postId}/like`, { method: 'POST' }),
+  getAll:      ()                        => request('/feed'),
+  getOne:      (postId)                  => request(`/feed/${postId}`),
+  create:      (body)                    => request('/feed', { method: 'POST', body: JSON.stringify(body) }),
+  delete:      (postId)                  => request(`/feed/${postId}`, { method: 'DELETE' }),
+  addComment:  (postId, body)            => request(`/feed/${postId}/comments`, { method: 'POST', body: JSON.stringify(body) }),
+  addReply:    (postId, commentId, body) => request(`/feed/${postId}/comments/${commentId}/replies`, { method: 'POST', body: JSON.stringify(body) }),
+  toggleLike:  (postId)                  => request(`/feed/${postId}/like`, { method: 'POST' }),
 }
 
 
@@ -107,4 +108,28 @@ export const adminApi = {
   makeAdmin:     (userId)        => request(`/admin/users/${userId}/make-admin`, { method: 'POST' }),
   getReports:    (status = '')   => request(`/admin/reports${status ? '?status=' + status : ''}`),
   resolveReport: (reportId, body) => request(`/admin/reports/${reportId}/resolve`, { method: 'POST', body: JSON.stringify(body) }),
+}
+
+
+
+// ─── Connections and Messages ────────────────────────────────────────────────────────────────────
+
+
+
+export const connectionsApi = {
+  sendRequest:   (userId)       => request(`/connections/request/${userId}`, { method: 'POST' }),
+  accept:        (connId)       => request(`/connections/${connId}/accept`,  { method: 'POST' }),
+  reject:        (connId)       => request(`/connections/${connId}/reject`,  { method: 'POST' }),
+  remove:        (connId)       => request(`/connections/${connId}`,         { method: 'DELETE' }),
+  getPending:    ()             => request('/connections/pending'),
+  getAll:        ()             => request('/connections'),
+  getStatus:     (userId)       => request(`/connections/status/${userId}`),
+  getCount:       (userId)      => request(`/connections/count/${userId}`),
+}
+
+export const messagesApi = {
+  getInbox:      ()             => request('/messages'),
+  getMessages:   (userId)       => request(`/messages/${userId}`),
+  send:          (userId, body) => request(`/messages/${userId}`, { method: 'POST', body: JSON.stringify(body) }),
+  getUnreadCount: ()            => request('/messages/unread-count'),
 }

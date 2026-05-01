@@ -124,13 +124,13 @@ export default function ListingCard({ listing }) {
             </span>
 
             {/* WhatsApp — logged-in users only */}
-            {user && owner.phone_no && (
-              <WhatsAppIconButton
-                phone={owner.phone_no}
-                ownerName={owner.full_name}
-                listingTitle={title}
-              />
-            )}
+            {user && owner.role === 'landlord' && owner.phone_no && (
+                <WhatsAppIconButton
+                  phone={owner.phone_no}
+                  ownerName={owner.full_name}
+                  listingTitle={title}
+                />
+              )}
           </div>
         )}
       </div>

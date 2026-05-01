@@ -9,6 +9,9 @@ import Avatar from '@/components/ui/Avatar'
 import Button from '@/components/ui/Button'
 import Spinner from '@/components/ui/Spinner'
 import { WhatsAppButton } from '@/components/ui/WhatsAppButton'
+import ConnectButton from '@/components/ui/ConnectButton'
+
+
 
 const STATUS_STYLES = {
   active: 'badge-active',
@@ -226,37 +229,47 @@ export default function ListingDetail() {
                 </div>
               </Link>
 
-              {/* Contact — only shown to logged-in users */}
-              {user && owner.phone_no && (
-                <div className="flex flex-col gap-2">
-                  <a
-                    href={`tel:${owner.phone_no}`}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-opacity hover:opacity-80"
-                    style={{
-                      background: 'var(--bg-subtle)',
-                      color: 'var(--text-primary)',
-                      border: '1px solid var(--border)',
-                    }}
-                  >
-                    <PhoneIcon />
-                    {owner.phone_no}
-                  </a>
+{/* Contact Section */}
+{owner && user && (
+  <div className="flex flex-col gap-2 mt-3">
 
-                  <WhatsAppButton
-                    phone={owner.phone_no}
-                    ownerName={owner.full_name}
-                    listingTitle={listing.title}
-                  />
-                </div>
-              )}
+    {owner.role === 'landlord' && owner.phone_no ? (
+      <>
+        <a
+          href={`tel:${owner.phone_no}`}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-opacity hover:opacity-80"
+          style={{
+            background: 'var(--bg-subtle)',
+            color: 'var(--text-primary)',
+            border: '1px solid var(--border)',
+          }}
+        >
+          <PhoneIcon />
+          {owner.phone_no}
+        </a>
 
-              {/* Prompt guests to log in */}
-              {!user && owner.phone_no && (
-                <p className="text-xs text-center mt-2" style={{ color: 'var(--text-muted)' }}>
-                  <Link to="/login" className="text-[var(--brand)] hover:underline">Log in</Link>
-                  {' '}to view contact details
-                </p>
-              )}
+        <WhatsAppButton
+          phone={owner.phone_no}
+          ownerName={owner.full_name}
+          listingTitle={listing.title}
+        />
+      </>
+    ) : (
+      <ConnectButton
+        userId={owner.id}
+        userName={owner.full_name}
+      />
+    )}
+
+  </div>
+)}
+
+{/* Not logged in */}
+{!user && (
+  <p className="text-xs text-center mt-2" style={{ color: 'var(--text-muted)' }}>
+    <Link to="/login" className="text-[var(--brand)] hover:underline">Log in</Link> to contact
+  </p>
+)}
             </div>
           )}
 
