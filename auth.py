@@ -54,7 +54,7 @@ def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()), 
     db: Session = Depends(get_db)
 ):
-    # to decode the token
+    # to decode the token 
     try:
         print(f"DEBUG SECRET_KEY: {SECRET_KEY}")
         print(f"DEBUG ALGORITHM: {ALGORITHM}")
@@ -92,4 +92,13 @@ async def get_current_user_optional(
         return None
 
 
-
+#expose token for websocket/router.py
+def decode_token(token: str) -> dict:
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='Invalid or expired token'
+        )

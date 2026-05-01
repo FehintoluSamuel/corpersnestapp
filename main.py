@@ -4,29 +4,61 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers.auth_router import router as auth_router
 from routers.listings_router import router as listings_router
 from routers.feed_router import router as feed_router
+from routers.admin_router import router as admin_router
+from models.database_model import (       # noqa: F401  — import all models so
+    User, LandlordProfile, Listing,       # create_all sees them
+    Post, Comment, PostLike, Report
+)
+# Add to main.py — import and register new routers
+from routers.connections_router import router as connections_router
+from routers.messages_router    import router as messages_router
+from ws.router           import router as ws_router
+"""
+main.py
 
+Wire-up reference — shows how to register the new routers and start the scheduler.
+Merge this into your existing main.py, don't replace it wholesale.
+"""
+# ── Scheduler ─────────────────────────────────────────────────────────────────
+from scheduler import start_scheduler
+
+# ── DB ────────────────────────────────────────────────────────────────────────
 Base.metadata.create_all(bind=engine)
 app = FastAPI(title='CorpersNest Api', version='1.0.0')
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173","http://192.168.0.100:5173"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ],
     allow_credentials=True,
+    allow_methods=["*"],
     allow_headers=["*"],
-    allow_methods=["*"]
 )
-API_V1_PREFIX = '/api/v1'
 
+
+
+API_V1_PREFIX = '/api/v1'
+# ── Routers ───────────────────────────────────────────────────────────────────
 app.include_router(auth_router, prefix=API_V1_PREFIX)
 app.include_router(listings_router, prefix=API_V1_PREFIX)
 app.include_router(feed_router, prefix=API_V1_PREFIX)
+app.include_router(admin_router, prefix=API_V1_PREFIX)
+app.include_router(connections_router, prefix=API_V1_PREFIX)
+app.include_router(messages_router, prefix=API_V1_PREFIX)
+app.include_router(ws_router, prefix=API_V1_PREFIX)
 
-
-
+# ── Start scheduler ───────────────────────────────────────────────────────────
+start_scheduler()
 
 @app.get("/")
 async def get_root():
     return {"message": "Welcome to the NYSC Accommodation Management System API"}
+
+
 
 
 
