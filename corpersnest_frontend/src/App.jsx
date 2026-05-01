@@ -47,6 +47,9 @@ import ConnectionsPage    from '@/pages/connections/ConnectionsPage'
 import MessagesPage       from '@/pages/messages/MessagesPage'
 import ConversationPage   from '@/pages/messages/ConversationPage'
 
+// Searches
+import SearchPage from '@/pages/SearchPage'
+
 function RootRedirect() {
   const { user, loading } = useAuth()
   if (loading) return null
@@ -119,7 +122,10 @@ export default function App() {
                   <Route path="/connections" element={<ProtectedRoute><ConnectionsPage /></ProtectedRoute>} />
                   <Route path="/messages"    element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
                   <Route path="/messages/:userId" element={<ProtectedRoute><ConversationPage /></ProtectedRoute>} />
- 
+                  
+
+                  {/* ── Searches ── */}
+                  <Route path="/search" element={<SearchPage />} />
 
 
                 </Routes>

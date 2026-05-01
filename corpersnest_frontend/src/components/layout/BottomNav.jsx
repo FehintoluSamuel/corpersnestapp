@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 
 const navItems = [
@@ -42,8 +42,11 @@ const navItems = [
 ]
 
 export default function BottomNav() {
-  const { user } = useAuth()
-  if (!user) return null
+  const { user }   = useAuth()
+  const { pathname } = useLocation()
+
+  // Hide on conversation page so input is not covered
+  if (!user || pathname.startsWith('/messages/')) return null
 
   return (
     <nav
@@ -57,10 +60,7 @@ export default function BottomNav() {
             to={to}
             className={({ isActive }) =>
               `flex flex-col items-center gap-0.5 px-6 py-2 rounded-xl transition-all duration-150
-              ${isActive
-                ? 'text-[var(--brand)]'
-                : 'text-[var(--text-muted)]'
-              }`
+              ${isActive ? 'text-[var(--brand)]' : 'text-[var(--text-muted)]'}`
             }
           >
             {({ isActive }) => (

@@ -48,6 +48,7 @@ export const authApi = {
   updateAvatar:  (url)      => request('/auth/me/avatar', { method: 'PATCH', body: JSON.stringify({ profile_picture_url: url }) }),
   updateLandlordProfile: (body) => request('/auth/me/landlord-profile', { method: 'PATCH', body: JSON.stringify(body) }),
   getPublicUser: (userId)   => request(`/auth/users/${userId}`),
+  
 }
 
 
@@ -124,7 +125,8 @@ export const connectionsApi = {
   getPending:    ()             => request('/connections/pending'),
   getAll:        ()             => request('/connections'),
   getStatus:     (userId)       => request(`/connections/status/${userId}`),
-  getCount:       (userId)      => request(`/connections/count/${userId}`),
+  getCount:      (userId)      => request(`/connections/count/${userId}`),
+  getSent:       ()             => request('/connections/sent'),
 }
 
 export const messagesApi = {

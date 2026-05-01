@@ -7,6 +7,11 @@
     <meta name="description" content="Housing platform for NYSC corps members in Abia State." />
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
+      function setVh() { document.documentElement.style.setProperty('--vh', window.innerHeight * 0.01 + 'px') }
+      setVh()
+      window.addEventListener('resize', setVh)
+    </script>
+    <script>
       tailwind.config = {
         darkMode: 'class',
         theme: {
