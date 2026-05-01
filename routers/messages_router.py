@@ -76,6 +76,28 @@ async def get_inbox(
     return result
 
 
+
+
+@router.get('/unread-count')
+async def get_unread_count(
+    current_user: User    = Depends(get_current_user),
+    db:           Session = Depends(get_db),
+):
+    """Total unread messages across all conversations."""
+    count = db.query(Message).join(Conversation).filter(
+        or_(
+            Conversation.user_a_id == current_user.id,
+            Conversation.user_b_id == current_user.id,
+        ),
+        Message.sender_id != current_user.id,
+        Message.is_read   == False,
+    ).count()
+    return {'count': count}
+
+
+
+
+
 @router.get('/{other_user_id}', response_model=List[MessageResponse])
 async def get_messages(
     other_user_id: int,
@@ -103,21 +125,7 @@ async def get_messages(
 
 
 
-@router.get('/unread-count')
-async def get_unread_count(
-    current_user: User    = Depends(get_current_user),
-    db:           Session = Depends(get_db),
-):
-    """Total unread messages across all conversations."""
-    count = db.query(Message).join(Conversation).filter(
-        or_(
-            Conversation.user_a_id == current_user.id,
-            Conversation.user_b_id == current_user.id,
-        ),
-        Message.sender_id != current_user.id,
-        Message.is_read   == False,
-    ).count()
-    return {'count': count}
+
 
 
 

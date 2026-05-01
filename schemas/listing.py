@@ -6,9 +6,11 @@ from dependencies import ListingType, ListingStatus
 
 #listing field validation for owner response
 class OwnerResponse(BaseModel):
-    id: int
-    full_name: str
-    phone_no: Optional[str] = None 
+    id:                  int
+    full_name:           str
+    role:                str          # ← must be here
+    phone_no:            Optional[str] = None
+    profile_picture_url: Optional[str] = None
 
 #listing field validation for client POST request
 class ListingCreateRequest(BaseModel):
@@ -59,6 +61,17 @@ class ListingResponse(BaseModel):
 
 
 
+"""# In schemas/listing.py — make sure OwnerSnippet includes role:
+
+class OwnerSnippet(BaseModel):
+    id:                  int
+    full_name:           str
+    role:                str          # ← must be here
+    phone_no:            Optional[str] = None
+    profile_picture_url: Optional[str] = None
+
+    class Config:
+        from_attributes = True"""
 
 
 

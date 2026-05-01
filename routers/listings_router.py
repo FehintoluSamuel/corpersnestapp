@@ -11,6 +11,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 
+from sqlalchemy.orm import joinedload
+
+
 from database import get_db
 from models.database_model import User, Listing
 from schemas.listing import ListingCreateRequest, ListingUpdateRequest, ListingResponse
@@ -23,28 +26,14 @@ router = APIRouter(prefix="/listings", tags=["Listings"])
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
 def require_listing_permission(current_user: User) -> None:
-    """
-    Raises 403 if the user is not allowed to create or manage listings.
-    - PCMs must complete their NYSC profile first
-    - Landlords must be verified before posting
-    - Suspended users cannot post
-    """
     if current_user.status == Status.suspended:
-        raise HTTPException(
-            status_code=403,
-            detail="Your account has been suspended. Contact support."
-        )
+        raise HTTPException(403, 'Your account has been suspended. Contact support.')
     if current_user.status == Status.pending_verification:
-        raise HTTPException(
-            status_code=403,
-            detail="Your account is pending verification. We'll notify you once approved."
-        )
-    if current_user.role == Role.pcm:
-        raise HTTPException(
-            status_code=403,
-            detail="Complete your NYSC profile with your state code to post listings."
-        )
-
+        raise HTTPException(403, 'Your account is pending verification.')
+    # Only outgoing corpers, alumni, and landlords can post
+    # incoming_corpers and pcms cannot post listings
+    if current_user.role not in (Role.outgoing_corper, Role.alumni, Role.landlord, Role.admin):
+        raise HTTPException(403, 'Only outgoing corpers and landlords can post listings.')
 
 # ─── GET all listings ─────────────────────────────────────────────────────────
 
@@ -56,7 +45,7 @@ async def get_all_listings(
     db:        Session = Depends(get_db),
 ):
     """Get all active listings with optional filters. No auth required."""
-    query = db.query(Listing).filter(Listing.status == "active")
+    query = db.query(Listing).filter(Listing.status == 'active').options(joinedload(Listing.owner))
 
     if lga:
         query = query.filter(Listing.lga == lga)

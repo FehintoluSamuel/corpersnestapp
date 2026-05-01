@@ -169,4 +169,17 @@ async def get_connection_count(user_id: int, db: Session = Depends(get_db)):
         ),
         Connection.status == ConnectionStatus.accepted,
     ).count()
-    return {'count': count}
+    return {'count': count} 
+
+
+
+@router.get('/sent', response_model=List[ConnectionResponse])
+async def get_sent_requests(
+    current_user: User    = Depends(get_current_user),
+    db:           Session = Depends(get_db),
+):
+    """Requests the current user has sent that are still pending."""
+    return db.query(Connection).filter(
+        Connection.requester_id == current_user.id,
+        Connection.status       == ConnectionStatus.pending,
+    ).all()
