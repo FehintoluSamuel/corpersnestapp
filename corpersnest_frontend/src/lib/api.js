@@ -135,3 +135,25 @@ export const messagesApi = {
   send:          (userId, body) => request(`/messages/${userId}`, { method: 'POST', body: JSON.stringify(body) }),
   getUnreadCount: ()            => request('/messages/unread-count'),
 }
+
+
+// ─── Notifications and Bookmarks ────────────────────────────────────────────────────────────────────
+
+
+export const notificationsApi = {
+  getAll:        ()               => request('/notifications'),
+  getUnreadCount:()               => request('/notifications/unread-count'),
+  markAllRead:   ()               => request('/notifications/read-all', { method: 'POST' }),
+  markRead:      (id)             => request(`/notifications/${id}/read`, { method: 'POST' }),
+}
+
+export const bookmarksApi = {
+  getAll:   ()                          => request('/bookmarks'),
+  toggle:   (body)                      => request('/bookmarks/toggle', { method: 'POST', body: JSON.stringify(body) }),
+  getStatus:(postId, listingId) => {
+    const p = new URLSearchParams()
+    if (postId)    p.set('post_id',    postId)
+    if (listingId) p.set('listing_id', listingId)
+    return request(`/bookmarks/status?${p}`)
+  },
+}
