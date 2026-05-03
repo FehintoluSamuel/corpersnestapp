@@ -4,7 +4,7 @@
 
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { feedApi } from '@/lib/api'
+import { feedApi, bookmarksApi } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
 import { useToast } from '@/context/ToastContext'
 import { formatDate } from '@/lib/utils'
@@ -12,19 +12,18 @@ import Avatar from '@/components/ui/Avatar'
 import RoleBadge from '@/components/ui/RoleBadge'
 
 const TAG_LABELS = {
-  question:       'Question',
-  tip:            'Tip',
-  room_available: 'Room available',
-  roommate_needed:'Roommate needed',
-  scam_warning:   'Scam warning',
-  general:        'General',
+  question: 'Question', tip: 'Tip', room_available: 'Room available',
+  roommate_needed: 'Roommate needed', scam_warning: 'Scam warning', general: 'General',
 }
 
 export default function PostCard({ post, onDelete, onLikeToggle }) {
   const { user } = useAuth()
   const toast    = useToast()
-  const [liking,   setLiking]   = useState(false)
-  const [deleting, setDeleting] = useState(false)
+
+  const [liking,      setLiking]      = useState(false)
+  const [deleting,    setDeleting]    = useState(false)
+  const [bookmarked,  setBookmarked]  = useState(post.bookmarked ?? false)
+  const [bookmarking, setBookmarking] = useState(false)
 
   const isOwner = user && post.user?.id === user.id
 
@@ -35,6 +34,19 @@ export default function PostCard({ post, onDelete, onLikeToggle }) {
     setLiking(true)
     try { await onLikeToggle?.(post.id) }
     finally { setLiking(false) }
+  }
+
+  const handleBookmark = async (e) => {
+    e.preventDefault()
+    if (!user) { toast.info('Log in to bookmark posts'); return }
+    if (bookmarking) return
+    setBookmarking(true)
+    try {
+      const res = await bookmarksApi.toggle({ post_id: post.id })
+      setBookmarked(res.bookmarked)
+      toast.success(res.bookmarked ? 'Post bookmarked' : 'Bookmark removed')
+    } catch { toast.error('Could not bookmark') }
+    finally { setBookmarking(false) }
   }
 
   const handleDelete = async (e) => {
@@ -56,30 +68,21 @@ export default function PostCard({ post, onDelete, onLikeToggle }) {
 
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3">
-        {/* Author — clickable to public profile */}
-        <Link
-          to={`/users/${post.user?.id}`}
+        <Link to={`/users/${post.user?.id}`}
           className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
-          onClick={e => e.stopPropagation()}
-        >
+          onClick={e => e.stopPropagation()}>
           <Avatar name={post.user?.full_name} src={post.user?.profile_picture_url} size="sm" />
           <div>
-            <p className="text-sm font-semibold leading-none mb-1"
-              style={{ color: 'var(--text-primary)' }}>
+            <p className="text-sm font-semibold leading-none mb-1" style={{ color: 'var(--text-primary)' }}>
               {post.user?.full_name}
             </p>
             <div className="flex items-center gap-1.5">
               <RoleBadge role={post.user?.role} />
-              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                · {formatDate(post.created_at)}
-              </span>
+              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>· {formatDate(post.created_at)}</span>
             </div>
           </div>
         </Link>
-
-        <span className={`tag tag-${post.tag} shrink-0`}>
-          {TAG_LABELS[post.tag] || post.tag}
-        </span>
+        <span className={`tag tag-${post.tag} shrink-0`}>{TAG_LABELS[post.tag] || post.tag}</span>
       </div>
 
       {/* Body */}
@@ -89,31 +92,22 @@ export default function PostCard({ post, onDelete, onLikeToggle }) {
           {post.content}
         </p>
         {post.image_url && (
-          <img
-            src={post.image_url}
-            alt="Post attachment"
+          <img src={post.image_url} alt="Post attachment"
             className="w-full rounded-xl object-cover max-h-64 mb-3"
-            onError={e => e.target.style.display = 'none'}
-          />
+            onError={e => e.target.style.display = 'none'} />
         )}
       </Link>
 
       {/* Footer */}
-      <div className="flex items-center gap-4 pt-2 border-t"
-        style={{ borderColor: 'var(--border)' }}>
+      <div className="flex items-center gap-4 pt-2 border-t" style={{ borderColor: 'var(--border)' }}>
 
         {/* Like */}
-        <button
-          onClick={handleLike}
-          disabled={liking}
+        <button onClick={handleLike} disabled={liking}
           className="flex items-center gap-1.5 text-xs transition-colors group"
-          style={{ color: post.liked_by_me ? '#EF4444' : 'var(--text-muted)' }}
-          aria-label={post.liked_by_me ? 'Unlike post' : 'Like post'}
-        >
+          style={{ color: post.liked_by_me ? '#EF4444' : 'var(--text-muted)' }}>
           <svg width="15" height="15" viewBox="0 0 24 24"
             fill={post.liked_by_me ? 'currentColor' : 'none'}
-            stroke="currentColor" strokeWidth="1.8"
-            strokeLinecap="round" strokeLinejoin="round"
+            stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
             className="group-hover:scale-110 transition-transform">
             <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
           </svg>
@@ -121,11 +115,9 @@ export default function PostCard({ post, onDelete, onLikeToggle }) {
         </button>
 
         {/* Comments */}
-        <Link
-          to={`/feed/${post.id}`}
+        <Link to={`/feed/${post.id}`}
           className="flex items-center gap-1.5 text-xs transition-colors hover:text-[var(--brand)]"
-          style={{ color: 'var(--text-muted)' }}
-        >
+          style={{ color: 'var(--text-muted)' }}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
@@ -133,15 +125,26 @@ export default function PostCard({ post, onDelete, onLikeToggle }) {
           {post.comments_count ?? 0} comment{post.comments_count !== 1 ? 's' : ''}
         </Link>
 
-        {/* Delete — owner only */}
+        {/* Bookmark */}
+        {user && (
+          <button onClick={handleBookmark} disabled={bookmarking}
+            className="flex items-center gap-1.5 text-xs transition-colors group"
+            style={{ color: bookmarked ? 'var(--brand)' : 'var(--text-muted)' }}
+            aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark post'}>
+            <svg width="14" height="14" viewBox="0 0 24 24"
+              fill={bookmarked ? 'currentColor' : 'none'}
+              stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+              className="group-hover:scale-110 transition-transform">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+            </svg>
+          </button>
+        )}
+
+        {/* Delete */}
         {isOwner && (
-          <button
-            onClick={handleDelete}
-            disabled={deleting}
+          <button onClick={handleDelete} disabled={deleting}
             className="ml-auto text-xs flex items-center gap-1 transition-colors hover:text-red-500"
-            style={{ color: 'var(--text-muted)' }}
-            aria-label="Delete post"
-          >
+            style={{ color: 'var(--text-muted)' }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="3 6 5 6 21 6"/>

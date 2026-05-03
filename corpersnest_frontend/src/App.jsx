@@ -39,8 +39,9 @@ import ConnectionsPage  from '@/pages/connections/ConnectionsPage'
 import MessagesPage     from '@/pages/messages/MessagesPage'
 import ConversationPage from '@/pages/messages/ConversationPage'
 
-import SearchPage   from '@/pages/SearchPage'
-import NotFoundPage from '@/pages/NotFound'
+import SearchPage    from '@/pages/SearchPage'
+import BookmarksPage from '@/pages/BookmarksPage'
+import NotFoundPage  from '@/pages/NotFound'
 
 
 function RootRedirect() {
@@ -64,8 +65,10 @@ export default function App() {
       <AuthProvider>
         <ToastProvider>
           <BrowserRouter>
+            {/* Root div has NO overflow-x-hidden — that would break sticky Navbar */}
             <div className="min-h-screen flex flex-col">
               <Navbar />
+              {/* overflow-x-hidden only on the content area, not the root */}
               <div className="flex-1 w-full overflow-x-hidden">
                 <Routes>
 
@@ -109,8 +112,9 @@ export default function App() {
                   <Route path="/messages"         element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
                   <Route path="/messages/:userId" element={<ProtectedRoute><ConversationPage /></ProtectedRoute>} />
 
-                  {/* Search */}
-                  <Route path="/search" element={<SearchPage />} />
+                  {/* Search & Bookmarks */}
+                  <Route path="/search"    element={<SearchPage />} />
+                  <Route path="/bookmarks" element={<ProtectedRoute><BookmarksPage /></ProtectedRoute>} />
 
                   {/* Fallback */}
                   <Route path="*" element={<NotFoundPage />} />

@@ -2,8 +2,11 @@
  * components/listings/ListingCard.jsx
  */
 
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
+import { useToast } from '@/context/ToastContext'
+import { bookmarksApi } from '@/lib/api'
 import { formatPrice, formatDate } from '@/lib/utils'
 import Avatar from '@/components/ui/Avatar'
 import RoleBadge from '@/components/ui/RoleBadge'
@@ -22,10 +25,28 @@ const STATUS_STYLES = {
 
 export default function ListingCard({ listing }) {
   const { user } = useAuth()
+  const toast    = useToast()
   const {
     id, title, address, lga, price_monthly, bedrooms,
     listing_type, status, owner, created_at, image_url,
   } = listing
+
+  const [bookmarked,  setBookmarked]  = useState(listing.bookmarked ?? false)
+  const [bookmarking, setBookmarking] = useState(false)
+
+  const handleBookmark = async (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!user) { toast.info('Log in to bookmark listings'); return }
+    if (bookmarking) return
+    setBookmarking(true)
+    try {
+      const res = await bookmarksApi.toggle({ listing_id: id })
+      setBookmarked(res.bookmarked)
+      toast.success(res.bookmarked ? 'Listing bookmarked' : 'Bookmark removed')
+    } catch { toast.error('Could not bookmark') }
+    finally { setBookmarking(false) }
+  }
 
   return (
     <Link
@@ -53,19 +74,31 @@ export default function ListingCard({ listing }) {
                 stroke="var(--border-strong)" strokeWidth="1.2" strokeLinecap="round">
                 <path d="M3 9L12 2L21 9V21H15V14H9V21H3V9Z"/>
               </svg>
-              <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
-                No photo yet
-              </span>
+              <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>No photo yet</span>
             </div>
           </>
         )}
 
-        <span className={`tag absolute top-3 left-3 capitalize ${STATUS_STYLES[status] || ''}`}>
-          {status}
-        </span>
+        <span className={`tag absolute top-3 left-3 capitalize ${STATUS_STYLES[status] || ''}`}>{status}</span>
         <span className={`tag absolute top-3 right-3 ${listing_type === 'corper_room' ? 'badge-corper' : 'badge-landlord'}`}>
           {TYPE_LABELS[listing_type]}
         </span>
+
+        {/* Bookmark button — top right over image */}
+        {user && (
+          <button
+            onClick={handleBookmark}
+            disabled={bookmarking}
+            className="absolute bottom-3 right-3 w-8 h-8 rounded-xl flex items-center justify-center transition-all"
+            style={{ background: 'rgba(0,0,0,0.45)', color: bookmarked ? '#FFD700' : 'white' }}
+            aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark listing'}>
+            <svg width="14" height="14" viewBox="0 0 24 24"
+              fill={bookmarked ? 'currentColor' : 'none'}
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+            </svg>
+          </button>
+        )}
       </div>
 
       {/* Body */}
@@ -76,8 +109,7 @@ export default function ListingCard({ listing }) {
         </h3>
 
         <p className="text-xs flex items-center gap-1 mb-3" style={{ color: 'var(--text-muted)' }}>
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
             <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
             <circle cx="12" cy="9" r="2.5"/>
           </svg>
@@ -86,16 +118,12 @@ export default function ListingCard({ listing }) {
 
         <div className="flex items-end justify-between">
           <div>
-            <span className="text-base font-semibold text-[var(--brand)]">
-              {formatPrice(price_monthly)}
-            </span>
+            <span className="text-base font-semibold text-[var(--brand)]">{formatPrice(price_monthly)}</span>
             <span className="text-xs" style={{ color: 'var(--text-muted)' }}>/month</span>
           </div>
           <div className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-muted)' }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-              <path d="M3 22V8l9-6 9 6v14"/>
-              <path d="M9 22V12h6v10"/>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+              <path d="M3 22V8l9-6 9 6v14"/><path d="M9 22V12h6v10"/>
             </svg>
             {bedrooms} bed{bedrooms !== 1 ? 's' : ''}
           </div>
@@ -103,34 +131,21 @@ export default function ListingCard({ listing }) {
 
         {/* Owner row */}
         {owner && (
-          <div className="flex items-center gap-2 mt-3 pt-3 border-t"
-            style={{ borderColor: 'var(--border)' }}>
-            <Link
-              to={`/users/${owner.id}`}
-              onClick={e => e.stopPropagation()}
-              className="flex items-center gap-2 min-w-0 hover:opacity-80 transition-opacity"
-            >
+          <div className="flex items-center gap-2 mt-3 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
+            <Link to={`/users/${owner.id}`} onClick={e => e.stopPropagation()}
+              className="flex items-center gap-2 min-w-0 hover:opacity-80 transition-opacity">
               <Avatar name={owner.full_name} src={owner.profile_picture_url} size="xs" />
               <span className="text-xs font-medium truncate" style={{ color: 'var(--text-primary)' }}>
                 {owner.full_name}
               </span>
             </Link>
-
-            {/* Role badge */}
             <RoleBadge role={owner.role} />
-
             <span className="text-xs ml-auto shrink-0" style={{ color: 'var(--text-muted)' }}>
               {formatDate(created_at)}
             </span>
-
-            {/* WhatsApp — logged-in users only */}
             {user && owner.role === 'landlord' && owner.phone_no && (
-                <WhatsAppIconButton
-                  phone={owner.phone_no}
-                  ownerName={owner.full_name}
-                  listingTitle={title}
-                />
-              )}
+              <WhatsAppIconButton phone={owner.phone_no} ownerName={owner.full_name} listingTitle={title} />
+            )}
           </div>
         )}
       </div>
