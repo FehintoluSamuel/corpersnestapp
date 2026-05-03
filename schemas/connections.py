@@ -25,4 +25,3 @@ class ConnectionResponse(BaseModel):
         from_attributes = True
 
 
-# ─────────────────────────────────────────────────────────────────────────────

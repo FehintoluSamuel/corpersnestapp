@@ -147,6 +147,7 @@ async def send_message(
         conversation_id = conv.id,
         sender_id       = current_user.id,
         content         = data.content,
+        image_url       = data.image_url,
     )
     db.add(msg)
     conv.last_message_at = datetime.now(timezone.utc)

@@ -10,6 +10,9 @@ from models.database_model import User, Connection, Conversation
 from schemas.connections import ConnectionResponse
 from auth import get_current_user
 from dependencies import ConnectionStatus
+from utils.notifications import notify_connection_request, notify_connection_accepted
+ 
+ 
 
 router = APIRouter(prefix='/connections', tags=['Connections'])
 
@@ -57,6 +60,8 @@ async def send_request(
 
     conn = Connection(requester_id=current_user.id, receiver_id=receiver_id)
     db.add(conn)
+    db.commit() 
+    notify_connection_request(db, receiver_id, current_user)
     db.commit()
     db.refresh(conn)
     return conn
@@ -77,8 +82,9 @@ async def accept_request(
         raise HTTPException(400, f'Connection is already {conn.status}')
 
     conn.status = ConnectionStatus.accepted
+    db.commit() 
+    notify_connection_accepted(db, conn.requester_id, current_user)
     db.commit()
-
     # Create conversation so they can message immediately
     _get_or_create_conversation(db, conn.requester_id, conn.receiver_id)
     db.refresh(conn)

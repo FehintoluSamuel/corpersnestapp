@@ -45,7 +45,7 @@ async def get_all_listings(
     db:        Session = Depends(get_db),
 ):
     """Get all active listings with optional filters. No auth required."""
-    query = db.query(Listing).filter(Listing.status == 'active').options(joinedload(Listing.owner))
+    query = db.query(Listing).filter(Listing.status == 'active',Listing.deleted_at == None).options(joinedload(Listing.owner))
 
     if lga:
         query = query.filter(Listing.lga == lga)
@@ -62,7 +62,7 @@ async def get_all_listings(
 @router.get("/{listing_id}", response_model=ListingResponse, status_code=200)
 async def get_listing(listing_id: int, db: Session = Depends(get_db)):
     """Get a single listing by ID. No auth required."""
-    listing = db.query(Listing).filter(Listing.id == listing_id).first()
+    listing = db.query(Listing).filter(Listing.id == listing_id,Listing.deleted_at == None).first()
     if not listing:
         raise HTTPException(status_code=404, detail="Listing not found.")
     return listing
@@ -159,7 +159,7 @@ async def delete_listing(
 
     if listing.owner_id != current_user.id:
         raise HTTPException(status_code=403, detail="You can only delete your own listings.")
-
+    listing.deleted_at = datetime.now(timezone.utc)
     db.delete(listing)
     db.commit()
     return None

@@ -9,7 +9,7 @@ Admin-only endpoints for:
 All endpoints require role=admin. Any non-admin request returns 403.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from datetime import datetime, timezone
@@ -21,8 +21,24 @@ from models.database_model import User, LandlordProfile, Report
 from schemas.auth import UserResponse
 from auth import get_current_user
 from dependencies import Role, Status, ReportStatus
+from utils.email import send_landlord_approved, send_landlord_rejected
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
+
+
+# ─── Helpers ───────────────────────────────────────────────────────────────
+async def _send_approved_safe(email: str, name: str):
+    try:
+        await send_landlord_approved(email, name)
+    except Exception:
+        pass
+
+async def _send_rejected_safe(email: str, name: str, note: str):
+    try:
+        await send_landlord_rejected(email, name, note)
+    except Exception:
+        pass
+
 
 
 # ─── Dependency ───────────────────────────────────────────────────────────────
@@ -144,16 +160,12 @@ async def get_pending_landlords(
 
 @router.post("/landlords/{user_id}/verify", response_model=UserResponse, status_code=200)
 async def verify_landlord(
-    user_id: int,
-    data:    VerifyLandlordRequest,
-    db:      Session = Depends(get_db),
-    admin:   User    = Depends(require_admin),
+    user_id:          int,
+    data:             VerifyLandlordRequest,
+    background_tasks: BackgroundTasks,
+    db:               Session = Depends(get_db),
+    admin:            User    = Depends(require_admin),
 ):
-    """
-    Approve or reject a landlord registration.
-    - Approve: sets status to active, records who verified and when.
-    - Reject:  sets status to suspended, records rejection note.
-    """
     user = db.query(User).filter(
         User.id   == user_id,
         User.role == Role.landlord,
@@ -179,9 +191,15 @@ async def verify_landlord(
         user.status               = Status.suspended
         profile.verification_note = data.note or "Registration rejected by admin."
 
+    if data.approve:
+        background_tasks.add_task(_send_approved_safe, user.email, user.full_name)
+    else:
+        background_tasks.add_task(_send_rejected_safe, user.email, user.full_name, data.note)
+
     db.commit()
     db.refresh(user)
     return user
+
 
 
 # ─── User management ──────────────────────────────────────────────────────────

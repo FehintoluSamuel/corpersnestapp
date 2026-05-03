@@ -9,7 +9,14 @@ from models.database_model import (       # noqa: F401  — import all models so
     User, LandlordProfile, Listing,       # create_all sees them
     Post, Comment, PostLike, Report
 )
-# Add to main.py — import and register new routers
+from limiter import limiter
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from routers.notifications_router import router as notifications_router
+from routers.bookmarks_router     import router as bookmarks_router
+ 
+
+
 from routers.connections_router import router as connections_router
 from routers.messages_router    import router as messages_router
 from ws.router           import router as ws_router
@@ -50,6 +57,19 @@ app.include_router(admin_router, prefix=API_V1_PREFIX)
 app.include_router(connections_router, prefix=API_V1_PREFIX)
 app.include_router(messages_router, prefix=API_V1_PREFIX)
 app.include_router(ws_router, prefix=API_V1_PREFIX)
+app.include_router(notifications_router, prefix=API_V1_PREFIX)
+app.include_router(bookmarks_router, prefix=API_V1_PREFIX)
+
+
+
+
+
+# ── Rate Limiter ────────────────────────────────────────────────────────────────────────
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
 
 # ── Start scheduler ───────────────────────────────────────────────────────────
 start_scheduler()

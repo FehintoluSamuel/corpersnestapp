@@ -17,6 +17,8 @@ from schemas.feed import (
     PostWithCommentsResponse,
 )
 from auth import get_current_user, get_current_user_optional
+from utils.notifications import notify_post_like, notify_post_comment, notify_comment_reply
+ 
 
 router = APIRouter(prefix='/feed', tags=['Community Feed'])
 
@@ -117,6 +119,9 @@ async def create_comment(
 
     comment = Comment(post_id=post_id, user_id=current_user.id, content=data.content)
     db.add(comment)
+    
+    db.commit()
+    notify_post_comment(db, post.user_id, current_user, post_id, comment.id)
     db.commit()
     db.refresh(comment)
     return comment
@@ -154,6 +159,8 @@ async def create_reply(
         content   = data.content,
     )
     db.add(reply)
+    db.commit() 
+    notify_comment_reply(db, parent.user_id, current_user, post_id, reply.id)
     db.commit()
     db.refresh(reply)
     return reply
@@ -182,7 +189,9 @@ async def toggle_like(
     else:
         db.add(PostLike(post_id=post_id, user_id=current_user.id))
         liked = True
-
+        
+    db.commit()
+    notify_post_like(db, post.user_id, current_user, post_id)
     db.commit()
     db.refresh(post)
     post.__dict__['likes_count']  = db.query(PostLike).filter(PostLike.post_id == post_id).count()
@@ -198,7 +207,7 @@ async def delete_post(
     current_user: User    = Depends(get_current_user),
     db:           Session = Depends(get_db),
 ):
-    post = db.query(Post).filter(Post.id == post_id).first()
+    post = db.query(Post).filter(Post.id == post_id,Post.deleted_at == None).first()
     if not post:
         raise HTTPException(status_code=404, detail='Post not found')
     if post.user_id != current_user.id:

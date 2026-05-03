@@ -4,11 +4,15 @@ routers/auth_router.py
 Handles registration, login, profile management, and public user lookup.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request, BackgroundTasks
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime, timezone
-
+import secrets
+from datetime import datetime, timezone, timedelta
+from models.database_model import PasswordResetToken
+from schemas.auth import ForgotPasswordRequest, ResetPasswordRequest
+from utils.email import send_welcome, send_password_reset
 from database import get_db
 from models.database_model import User, LandlordProfile
 from schemas.auth import (
@@ -25,14 +29,36 @@ from schemas.auth import (
 from auth import get_current_user, hash_password, verify_password, create_token
 from dependencies import Role, Status
 from utils.nysc import parse_state_code, derive_role
+import asyncio
+from limiter import limiter, get_limit
+from fastapi import Request
+
+
+
+
+
+
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
-
-
+# ─── Helper Function ─────────────────────────────────────────────────────────────
+async def _send_welcome_safe(email: str, name: str):
+    try:
+        await send_welcome(email, name)
+    except Exception:
+        pass  # Never crash registration due to email failure
 # ─── Registration ─────────────────────────────────────────────────────────────
 
 @router.post("/registration", response_model=AuthResponse, status_code=201)
-async def register(data: RegisterRequest, db: Session = Depends(get_db)):
+#@limiter.limit(lambda: get_limit("5/minute"))
+
+async def register(
+    request: Request,
+    data: RegisterRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db)
+):
+
+ 
     """
     Register a new user.
     - PCMs register with callup number only (state code added later).
@@ -88,13 +114,17 @@ async def register(data: RegisterRequest, db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(status_code=400, detail="Registration failed. Please check your details.")
 
+    background_tasks.add_task(_send_welcome_safe, new_user.email, new_user.full_name)
+
     token = create_token(new_user.id, new_user.role)
     return AuthResponse(token=token, user=new_user)
 
 # ─── Login ────────────────────────────────────────────────────────────────────
 
 @router.post('/login', response_model=AuthResponse, status_code=200)
-async def login_user(data: LoginRequest, db: Session = Depends(get_db)):
+#@limiter.limit(lambda: get_limit("10/minute"))
+async def login_user(request: Request, data: LoginRequest, db: Session = Depends(get_db)):
+
     existing_user = db.query(User).filter(User.email == data.email).first()
     print(f"DEBUG: Looking for email: {data.email}")
     print(f"DEBUG: User found: {existing_user}")
@@ -118,6 +148,61 @@ async def login_user(data: LoginRequest, db: Session = Depends(get_db)):
     
     token = create_token(existing_user.id, existing_user.role)
     return AuthResponse(token=token, user=existing_user)
+
+
+
+# ─── Forget Password ─────────────────────────────────────────────────────────────
+
+@router.post("/forgot-password", status_code=200)
+#@limiter.limit(lambda: get_limit("3/minute"))
+async def forgot_password(request: Request, data: ForgotPasswordRequest, db: Session = Depends(get_db)):
+ 
+    user = db.query(User).filter(User.email == data.email).first()
+    # Always return 200 to prevent email enumeration
+    if not user:
+        return {"message": "If that email exists, a reset link has been sent."}
+
+    # Invalidate old tokens
+    db.query(PasswordResetToken).filter(
+        PasswordResetToken.user_id == user.id,
+        PasswordResetToken.used == False,
+    ).update({"used": True})
+
+    token = secrets.token_urlsafe(32)
+    reset = PasswordResetToken(
+        user_id    = user.id,
+        token      = token,
+        expires_at = datetime.now(timezone.utc) + timedelta(hours=1),
+    )
+    db.add(reset)
+    db.commit()
+
+    await send_password_reset(user.email, user.full_name, token)
+    return {"message": "If that email exists, a reset link has been sent."}
+
+
+
+# ─── Password Reset ─────────────────────────────────────────────────────────────
+
+
+@router.post("/reset-password", status_code=200)
+async def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
+    record = db.query(PasswordResetToken).filter(
+        PasswordResetToken.token == data.token,
+        PasswordResetToken.used  == False,
+    ).first()
+
+    if not record or record.expires_at < datetime.now(timezone.utc):
+        raise HTTPException(status_code=400, detail="Invalid or expired reset link.")
+
+    user = db.query(User).filter(User.id == record.user_id).first()
+    user.password_hash = hash_password(data.password)
+    record.used = True
+    db.commit()
+    return {"message": "Password reset successful. You can now log in."}
+
+
+
 
 # ─── Current user ─────────────────────────────────────────────────────────────
 

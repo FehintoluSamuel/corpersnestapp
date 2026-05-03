@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import Optional, List
 from datetime import datetime
 from dependencies import PostTag
@@ -10,9 +10,11 @@ class MessageResponse(BaseModel):
     conversation_id: int
     sender_id:       int
     content:         str
-    is_read:         bool = False
-    created_at:      Optional[datetime] = None
+    image_url:       Optional[str] = None
+    is_read:         bool
+    created_at:      datetime
     sender:          Optional[UserSnippet] = None
+
     class Config:
         from_attributes = True
 
@@ -31,4 +33,12 @@ class ConversationResponse(BaseModel):
 
 
 class SendMessageRequest(BaseModel):
-    content: str
+    content:   str = ""
+    image_url: Optional[str] = None
+
+    @field_validator("content")
+    @classmethod
+    def validate_content(cls, v, info):
+        # Allow empty content if image_url is provided
+        return v
+

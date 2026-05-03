@@ -12,6 +12,10 @@ Mount in main.py:
     from scheduler import start_scheduler
     start_scheduler()
 """
+from models.database_model import Listing
+from dependencies import ListingStatus
+from datetime import datetime, timezone, timedelta
+
 
 import logging
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -73,6 +77,31 @@ def promote_users() -> None:
 
     finally:
         db.close()
+    
+    
+def expire_old_listings() -> None:
+    db = SessionLocal()
+    try:
+        cutoff = datetime.now(timezone.utc) - timedelta(days=90)
+        expired = (
+            db.query(Listing)
+            .filter(
+                Listing.status     == ListingStatus.active,
+                Listing.created_at <= cutoff,
+            )
+            .all()
+        )
+        for listing in expired:
+            listing.status = ListingStatus.inactive
+        if expired:
+            db.commit()
+        logger.info(f"Expired {len(expired)} old listing(s).")
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Listing expiry job failed: {e}")
+    finally:
+        db.close()
+
 
 
 def start_scheduler() -> None:
@@ -83,12 +112,13 @@ def start_scheduler() -> None:
     scheduler = BackgroundScheduler(timezone="Africa/Lagos")
 
     scheduler.add_job(
-        func    = promote_users,
-        trigger = CronTrigger(hour=0, minute=0),   # midnight WAT every day
-        id      = "nightly_role_promotion",
-        name    = "Nightly NYSC role promotion",
+        func    = expire_old_listings,
+        trigger = CronTrigger(hour=0, minute=30),  # 12:30 AM WAT
+        id      = "listing_expiry",
+        name    = "Auto-expire old listings",
         replace_existing = True,
-    )
+)
 
     scheduler.start()
-    logger.info("Scheduler started — nightly role promotion active.")
+    logger.info("Scheduler started — nightly role promotion active.") 
+    

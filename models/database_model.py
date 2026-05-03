@@ -8,7 +8,7 @@ Run create_all() after any schema change (delete the .db file first on SQLite).
 from database import Base
 from sqlalchemy import (
     Column, Integer, String, Enum, DateTime,
-    ForeignKey, Date, Numeric, Text, Boolean
+    ForeignKey, Date, Numeric, Text, Boolean, Index
 )
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship,backref
@@ -16,25 +16,26 @@ from dependencies import (
     Role, Status, ListingType, ListingStatus,
     PostTag, ReportType, ReportStatus
 )
-from dependencies import ConnectionStatus
+from dependencies import ConnectionStatus,NotificationType
 
-class User(Base):
+class User(Base): 
     __tablename__ = "users"
-
+    
     id                   = Column(Integer, primary_key=True, index=True)
     full_name            = Column(String(100), nullable=False)
     email                = Column(String(100), unique=True, index=True, nullable=False)
     password_hash        = Column(String(255), nullable=False)
-    phone_no             = Column(String(20), unique=True, nullable=True)
+    phone_no             = Column(String(20),  nullable=True)
 
     # ── NYSC identity ──────────────────────────────────────────────────────────
-    callup_number        = Column(String(50), unique=True, nullable=True)
-    nysc_state_code      = Column(String(50), unique=True, nullable=True)
+    callup_number        = Column(String(50),  nullable=True)
+    nysc_state_code      = Column(String(50),  nullable=True)
     stream               = Column(Integer, nullable=True)        # 1 or 2
     state                = Column(String(100), nullable=True)    # "Abia" — derived
     batch_stream         = Column(String(50), nullable=True)     # legacy, kept for compat
     camp_start_date      = Column(Date, nullable=True)           # actual date from call-up letter
-
+   
+    
     # ── Role & status ──────────────────────────────────────────────────────────
     role                 = Column(Enum(Role), index=True, nullable=False, default=Role.pcm)
     status               = Column(Enum(Status), index=True, nullable=False, default=Status.active)
@@ -58,7 +59,11 @@ class User(Base):
     connections_received = relationship('Connection', foreign_keys='Connection.receiver_id',  back_populates='receiver')
     
     
-    
+    __table_args__ = (
+        Index("ix_users_phone_no_unique",    "phone_no",       unique=True, sqlite_where=None),
+        Index("ix_users_callup_unique",      "callup_number",  unique=True, sqlite_where=None),
+        Index("ix_users_state_code_unique",  "nysc_state_code", unique=True, sqlite_where=None),
+    ) 
     
     
 class LandlordProfile(Base):
@@ -102,6 +107,7 @@ class Listing(Base):
     available_from = Column(Date, nullable=False)
     image_url      = Column(String(500), nullable=True)
     created_at     = Column(DateTime(timezone=True), server_default=func.now())
+    deleted_at = Column(DateTime(timezone=True), nullable=True)
 
     owner          = relationship("User", back_populates="listings")
     reports        = relationship("Report", foreign_keys="Report.listing_id", back_populates="listing")
@@ -117,6 +123,8 @@ class Post(Base):
     image_url   = Column(String(500), nullable=True)
     likes_count = Column(Integer, default=0)
     created_at  = Column(DateTime(timezone=True), server_default=func.now())
+    
+    deleted_at = Column(DateTime(timezone=True), nullable=True)
 
     user        = relationship("User", back_populates="posts")
     comments    = relationship("Comment", back_populates="post", cascade="all, delete-orphan")
@@ -212,8 +220,55 @@ class Message(Base):
     content         = Column(Text, nullable=False)
     is_read         = Column(Boolean, default=False)
     created_at      = Column(DateTime(timezone=True), server_default=func.now())
-
+    image_url       = Column(String(500), nullable=True)
     conversation = relationship('Conversation', back_populates='messages')
     sender       = relationship('User', foreign_keys=[sender_id])
 
+# Password Reset
+class PasswordResetToken(Base):
+    __tablename__ = "password_reset_tokens"
+    id         = Column(Integer, primary_key=True, index=True)
+    user_id    = Column(Integer, ForeignKey("users.id"), nullable=False)
+    token      = Column(String(64), unique=True, nullable=False, index=True)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    used       = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    user       = relationship("User")   
 
+
+
+
+
+# Notifications and Bookmarks
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id          = Column(Integer, primary_key=True, index=True)
+    user_id     = Column(Integer, ForeignKey("users.id"), nullable=False)   # recipient
+    actor_id    = Column(Integer, ForeignKey("users.id"), nullable=True)    # who triggered it
+    type        = Column(Enum(NotificationType), nullable=False, index=True)
+    message     = Column(String(300), nullable=False)
+    is_read     = Column(Boolean, default=False, index=True)
+    # Optional references
+    post_id     = Column(Integer, ForeignKey("posts.id"),    nullable=True)
+    comment_id  = Column(Integer, ForeignKey("comments.id"), nullable=True)
+    listing_id  = Column(Integer, ForeignKey("listings.id"), nullable=True)
+    created_at  = Column(DateTime(timezone=True), server_default=func.now())
+
+    user        = relationship("User", foreign_keys=[user_id])
+    actor       = relationship("User", foreign_keys=[actor_id])
+
+
+class Bookmark(Base):
+    __tablename__ = "bookmarks"
+
+    id         = Column(Integer, primary_key=True, index=True)
+    user_id    = Column(Integer, ForeignKey("users.id"),    nullable=False)
+    post_id    = Column(Integer, ForeignKey("posts.id"),    nullable=True)
+    listing_id = Column(Integer, ForeignKey("listings.id"), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    user    = relationship("User")
+    post    = relationship("Post",    foreign_keys=[post_id])
+    listing = relationship("Listing", foreign_keys=[listing_id])

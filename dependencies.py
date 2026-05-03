@@ -62,4 +62,13 @@ class ConnectionStatus(str, PyEnum):
     pending  = 'pending'
     accepted = 'accepted'
     rejected = 'rejected'
-    blocked  = 'blocked'
+    blocked  = 'blocked'     
+
+ #  ─── Notifications──────────────────────────────────────────────────────────────────
+class NotificationType(str, PyEnum):
+    post_like       = "post_like"
+    post_comment    = "post_comment"
+    comment_reply   = "comment_reply"
+    connection_req  = "connection_req"
+    connection_acc  = "connection_acc"
+    new_message     = "new_message"
