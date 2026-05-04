@@ -25,11 +25,27 @@ async def send_email(to: str, subject: str, body: str):
     await fm.send_message(msg)
 
 async def send_welcome(to: str, name: str):
-    await send_email(to, "Welcome to CorpersNest 🏠", f"""
-    <h2>Welcome, {name}!</h2>
-    <p>Your CorpersNest account is ready.</p>
-    <p>Find your perfect room or connect with other corpers.</p>
-    """)
+    msg = MessageSchema(
+        subject="Welcome to CorpersNest — Your account is ready",
+        recipients=[to],
+        body=f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #2D8A4E;">Welcome to CorpersNest, {name}!</h2>
+            <p>Your account is ready. Find your perfect room or connect with other corpers in Abia State.</p>
+            <a href="{os.getenv('FRONTEND_URL')}/listings" 
+               style="background:#2D8A4E;color:white;padding:12px 24px;text-decoration:none;border-radius:8px;display:inline-block;margin:16px 0;">
+               Browse Rooms
+            </a>
+            <p style="color:#666;font-size:12px;margin-top:32px;">
+                CorpersNest · Abia State, Nigeria<br>
+                You received this because you registered on CorpersNest.
+            </p>
+        </div>
+        """,
+        subtype="html",
+    )
+    fm = FastMail(conf)
+    await fm.send_message(msg)
 
 async def send_password_reset(to: str, name: str, token: str):
     url = f"{os.getenv('FRONTEND_URL')}/reset-password?token={token}"

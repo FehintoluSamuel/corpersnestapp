@@ -54,10 +54,10 @@ class ListingResponse(BaseModel):
     status: ListingStatus
     created_at: datetime
     owner: OwnerResponse
-
+    bookmarked_by_me: bool = False   # ← ADD THIS
+ 
     class Config:
         from_attributes = True
-
 
 
 

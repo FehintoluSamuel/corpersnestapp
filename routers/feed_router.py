@@ -18,6 +18,9 @@ from schemas.feed import (
 )
 from auth import get_current_user, get_current_user_optional
 from utils.notifications import notify_post_like, notify_post_comment, notify_comment_reply
+
+from models.database_model import User, Post, Comment, PostLike, Bookmark
+ 
  
 
 router = APIRouter(prefix='/feed', tags=['Community Feed'])
@@ -25,8 +28,9 @@ router = APIRouter(prefix='/feed', tags=['Community Feed'])
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
-def _enrich_post(post: Post, db: Session, current_user: Optional[User] = None) -> Post:
-    """Attaches computed fields to a post object."""
+from models.database_model import User, Post, Comment, PostLike, Bookmark
+ 
+def _enrich_post(post: Post, db: Session, current_user=None) -> Post:
     post.__dict__['likes_count']    = db.query(PostLike).filter(PostLike.post_id == post.id).count()
     post.__dict__['comments_count'] = db.query(Comment).filter(
         Comment.post_id == post.id, Comment.parent_id.is_(None)
@@ -35,6 +39,13 @@ def _enrich_post(post: Post, db: Session, current_user: Optional[User] = None) -
         db.query(PostLike).filter(
             PostLike.post_id == post.id,
             PostLike.user_id == current_user.id
+        ).first() is not None
+        if current_user else False
+    )
+    post.__dict__['bookmarked_by_me'] = (
+        db.query(Bookmark).filter(
+            Bookmark.post_id == post.id,
+            Bookmark.user_id == current_user.id
         ).first() is not None
         if current_user else False
     )
@@ -121,7 +132,7 @@ async def create_comment(
     db.add(comment)
     
     db.commit()
-    notify_post_comment(db, post.user_id, current_user, post_id, comment.id)
+    notify_post_comment(db, post.user_id, current_user, post_id, new_comment.id)
     db.commit()
     db.refresh(comment)
     return comment

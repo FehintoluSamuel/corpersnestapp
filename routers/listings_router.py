@@ -19,6 +19,13 @@ from models.database_model import User, Listing
 from schemas.listing import ListingCreateRequest, ListingUpdateRequest, ListingResponse
 from auth import get_current_user
 from dependencies import Role, Status
+from models.database_model import User, Listing, Bookmark
+ 
+
+from auth import get_current_user_optional
+from typing import Optional 
+ 
+ 
 
 router = APIRouter(prefix="/listings", tags=["Listings"])
 
@@ -37,34 +44,52 @@ def require_listing_permission(current_user: User) -> None:
 
 # ─── GET all listings ─────────────────────────────────────────────────────────
 
-@router.get("/", response_model=List[ListingResponse], status_code=200)
+@router.get('/', response_model=List[ListingResponse], status_code=200)
 async def get_all_listings(
-    lga:       str   = None,
-    price_max: float = None,
-    bedrooms:  int   = None,
-    db:        Session = Depends(get_db),
+    lga:          str   = None,
+    price_max:    float = None,
+    bedrooms:     int   = None,
+    db:           Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional),
 ):
-    """Get all active listings with optional filters. No auth required."""
-    query = db.query(Listing).filter(Listing.status == 'active',Listing.deleted_at == None).options(joinedload(Listing.owner))
-
-    if lga:
-        query = query.filter(Listing.lga == lga)
-    if price_max:
-        query = query.filter(Listing.price_monthly <= price_max)
-    if bedrooms:
-        query = query.filter(Listing.bedrooms == bedrooms)
-
-    return query.all()
-
+    query = db.query(Listing).filter(Listing.status == 'active')
+    if lga:       query = query.filter(Listing.lga == lga)
+    if price_max: query = query.filter(Listing.price_monthly <= price_max)
+    if bedrooms:  query = query.filter(Listing.bedrooms == bedrooms)
+ 
+    listings = query.all()
+ 
+    # Attach bookmarked_by_me to each listing
+    for listing in listings:
+        listing.__dict__['bookmarked_by_me'] = (
+            db.query(Bookmark).filter(
+                Bookmark.listing_id == listing.id,
+                Bookmark.user_id    == current_user.id,
+            ).first() is not None
+            if current_user else False
+        )
+    return listings
+ 
+ 
 
 # ─── GET one listing ──────────────────────────────────────────────────────────
 
-@router.get("/{listing_id}", response_model=ListingResponse, status_code=200)
-async def get_listing(listing_id: int, db: Session = Depends(get_db)):
-    """Get a single listing by ID. No auth required."""
-    listing = db.query(Listing).filter(Listing.id == listing_id,Listing.deleted_at == None).first()
+@router.get('/{listing_id}', response_model=ListingResponse, status_code=200)
+async def get_listing(
+    listing_id:   int,
+    db:           Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional),
+):
+    listing = db.query(Listing).filter(Listing.id == listing_id).first()
     if not listing:
-        raise HTTPException(status_code=404, detail="Listing not found.")
+        raise HTTPException(status_code=404, detail='Listing not found.')
+    listing.__dict__['bookmarked_by_me'] = (
+        db.query(Bookmark).filter(
+            Bookmark.listing_id == listing.id,
+            Bookmark.user_id    == current_user.id,
+        ).first() is not None
+        if current_user else False
+    )
     return listing
 
 

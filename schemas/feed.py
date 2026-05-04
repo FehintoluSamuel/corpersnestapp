@@ -60,16 +60,19 @@ class PostCreateRequest(BaseModel):
     image_url: Optional[str] = None
 
 
+
+
 class PostResponse(BaseModel):
-    id:             int
-    content:        str
-    tag:            str
-    image_url:      Optional[str]  = None
-    likes_count:    int            = 0
-    comments_count: int            = 0
-    liked_by_me:    bool           = False
-    created_at:     Optional[datetime] = None
-    user:           Optional[PostUserSnippet] = None
+    id:              int
+    content:         str
+    tag:             str
+    image_url:       Optional[str]  = None
+    likes_count:     int            = 0
+    comments_count:  int            = 0
+    liked_by_me:     bool           = False
+    bookmarked_by_me: bool          = False   
+    created_at:      Optional[datetime] = None
+    user:            Optional[PostUserSnippet] = None
 
     class Config:
         from_attributes = True
@@ -82,7 +85,8 @@ class PostWithCommentsResponse(BaseModel):
     image_url:      Optional[str]  = None
     likes_count:    int            = 0
     comments_count: int            = 0
-    liked_by_me:    bool           = False
+    liked_by_me:     bool           = False
+    bookmarked_by_me: bool          = False   
     created_at:     Optional[datetime] = None
     user:           Optional[PostUserSnippet] = None
     comments:       List[CommentResponse] = []  # top-level only; replies nested inside each
