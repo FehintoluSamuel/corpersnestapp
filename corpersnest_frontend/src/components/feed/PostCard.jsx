@@ -22,7 +22,7 @@ export default function PostCard({ post, onDelete, onLikeToggle }) {
 
   const [liking,      setLiking]      = useState(false)
   const [deleting,    setDeleting]    = useState(false)
-  const [bookmarked,  setBookmarked]  = useState(post.bookmarked ?? false)
+  const [bookmarked,  setBookmarked]  = useState(post.bookmarked_by_me ?? false)
   const [bookmarking, setBookmarking] = useState(false)
 
   const isOwner = user && post.user?.id === user.id
@@ -38,15 +38,21 @@ export default function PostCard({ post, onDelete, onLikeToggle }) {
 
   const handleBookmark = async (e) => {
     e.preventDefault()
+    e.stopPropagation()
     if (!user) { toast.info('Log in to bookmark posts'); return }
     if (bookmarking) return
     setBookmarking(true)
+    const prev = bookmarked
+    setBookmarked(!prev) // optimistic
     try {
       const res = await bookmarksApi.toggle({ post_id: post.id })
       setBookmarked(res.bookmarked)
-      toast.success(res.bookmarked ? 'Post bookmarked' : 'Bookmark removed')
-    } catch { toast.error('Could not bookmark') }
-    finally { setBookmarking(false) }
+    } catch (err) {
+      setBookmarked(prev) // revert on error
+      toast.error(err.message)
+    } finally {
+      setBookmarking(false)
+    }
   }
 
   const handleDelete = async (e) => {
@@ -99,12 +105,13 @@ export default function PostCard({ post, onDelete, onLikeToggle }) {
       </Link>
 
       {/* Footer */}
-      <div className="flex items-center gap-4 pt-2 border-t" style={{ borderColor: 'var(--border)' }}>
+      <div className="flex items-center gap-3 pt-2 border-t" style={{ borderColor: 'var(--border)' }}>
 
         {/* Like */}
         <button onClick={handleLike} disabled={liking}
           className="flex items-center gap-1.5 text-xs transition-colors group"
-          style={{ color: post.liked_by_me ? '#EF4444' : 'var(--text-muted)' }}>
+          style={{ color: post.liked_by_me ? '#EF4444' : 'var(--text-muted)' }}
+          aria-label={post.liked_by_me ? 'Unlike' : 'Like'}>
           <svg width="15" height="15" viewBox="0 0 24 24"
             fill={post.liked_by_me ? 'currentColor' : 'none'}
             stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
@@ -140,11 +147,11 @@ export default function PostCard({ post, onDelete, onLikeToggle }) {
           </button>
         )}
 
-        {/* Delete */}
+        {/* Delete — owner only */}
         {isOwner && (
           <button onClick={handleDelete} disabled={deleting}
             className="ml-auto text-xs flex items-center gap-1 transition-colors hover:text-red-500"
-            style={{ color: 'var(--text-muted)' }}>
+            style={{ color: 'var(--text-muted)' }} aria-label="Delete post">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="3 6 5 6 21 6"/>

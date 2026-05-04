@@ -24,14 +24,14 @@ const STATUS_STYLES = {
 }
 
 export default function ListingCard({ listing }) {
-  const { user } = useAuth()
-  const toast    = useToast()
+  const { user }  = useAuth()
+  const toast     = useToast()
   const {
     id, title, address, lga, price_monthly, bedrooms,
     listing_type, status, owner, created_at, image_url,
   } = listing
 
-  const [bookmarked,  setBookmarked]  = useState(listing.bookmarked ?? false)
+  const [bookmarked,  setBookmarked]  = useState(listing.bookmarked_by_me ?? false)
   const [bookmarking, setBookmarking] = useState(false)
 
   const handleBookmark = async (e) => {
@@ -40,12 +40,17 @@ export default function ListingCard({ listing }) {
     if (!user) { toast.info('Log in to bookmark listings'); return }
     if (bookmarking) return
     setBookmarking(true)
+    const prev = bookmarked
+    setBookmarked(!prev)
     try {
       const res = await bookmarksApi.toggle({ listing_id: id })
       setBookmarked(res.bookmarked)
-      toast.success(res.bookmarked ? 'Listing bookmarked' : 'Bookmark removed')
-    } catch { toast.error('Could not bookmark') }
-    finally { setBookmarking(false) }
+    } catch (err) {
+      setBookmarked(prev)
+      toast.error(err.message)
+    } finally {
+      setBookmarking(false)
+    }
   }
 
   return (
@@ -84,17 +89,20 @@ export default function ListingCard({ listing }) {
           {TYPE_LABELS[listing_type]}
         </span>
 
-        {/* Bookmark button — top right over image */}
+        {/* Bookmark button — top right corner on image */}
         {user && (
           <button
             onClick={handleBookmark}
             disabled={bookmarking}
-            className="absolute bottom-3 right-3 w-8 h-8 rounded-xl flex items-center justify-center transition-all"
-            style={{ background: 'rgba(0,0,0,0.45)', color: bookmarked ? '#FFD700' : 'white' }}
-            aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark listing'}>
-            <svg width="14" height="14" viewBox="0 0 24 24"
-              fill={bookmarked ? 'currentColor' : 'none'}
-              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark listing'}
+            className="absolute bottom-3 right-3 w-7 h-7 rounded-lg flex items-center justify-center transition-all"
+            style={{
+              background: bookmarked ? 'var(--brand)' : 'rgba(0,0,0,0.45)',
+              color: 'white',
+            }}>
+            <svg width="13" height="13" viewBox="0 0 24 24"
+              fill={bookmarked ? 'white' : 'none'}
+              stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
             </svg>
           </button>
@@ -109,7 +117,8 @@ export default function ListingCard({ listing }) {
         </h3>
 
         <p className="text-xs flex items-center gap-1 mb-3" style={{ color: 'var(--text-muted)' }}>
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
             <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
             <circle cx="12" cy="9" r="2.5"/>
           </svg>
@@ -122,7 +131,8 @@ export default function ListingCard({ listing }) {
             <span className="text-xs" style={{ color: 'var(--text-muted)' }}>/month</span>
           </div>
           <div className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-muted)' }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
               <path d="M3 22V8l9-6 9 6v14"/><path d="M9 22V12h6v10"/>
             </svg>
             {bedrooms} bed{bedrooms !== 1 ? 's' : ''}
