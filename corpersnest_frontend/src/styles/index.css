@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* ─── Design tokens ─── */
 :root {
   --brand: #2D8A4E;
