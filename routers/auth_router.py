@@ -49,7 +49,7 @@ async def _send_welcome_safe(email: str, name: str):
 # ─── Registration ─────────────────────────────────────────────────────────────
 
 @router.post("/registration", response_model=AuthResponse, status_code=201)
-@limiter.limit(lambda: get_limit("5/minute"))
+@limiter.limit(lambda: get_limit("200/minute"))
 
 async def register(
     request: Request,
