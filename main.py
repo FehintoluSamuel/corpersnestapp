@@ -20,6 +20,7 @@ from routers.bookmarks_router     import router as bookmarks_router
 from routers.connections_router import router as connections_router
 from routers.messages_router    import router as messages_router
 from ws.router           import router as ws_router
+import os
 """
 main.py
 
@@ -33,17 +34,19 @@ from scheduler import start_scheduler
 Base.metadata.create_all(bind=engine)
 app = FastAPI(title='CorpersNest Api', version='1.0.0')
 
+
+
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://192.168.0.101:5173",
-],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
 
 
 
