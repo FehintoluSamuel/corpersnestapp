@@ -49,7 +49,7 @@ async def _send_welcome_safe(email: str, name: str):
 # ─── Registration ─────────────────────────────────────────────────────────────
 
 @router.post("/registration", response_model=AuthResponse, status_code=201)
-@limiter.limit(lambda: get_limit("200/minute"))
+@limiter.limit(lambda: get_limit("2000/minute"))
 
 async def register(
     request: Request,
@@ -122,7 +122,7 @@ async def register(
 # ─── Login ────────────────────────────────────────────────────────────────────
 
 @router.post('/login', response_model=AuthResponse, status_code=200)
-@limiter.limit(lambda: get_limit("200/minute"))
+@limiter.limit(lambda: get_limit("2000/minute"))
 async def login_user(request: Request, data: LoginRequest, db: Session = Depends(get_db)):
 
     existing_user = db.query(User).filter(User.email == data.email).first()
@@ -154,7 +154,7 @@ async def login_user(request: Request, data: LoginRequest, db: Session = Depends
 # ─── Forget Password ─────────────────────────────────────────────────────────────
 
 @router.post("/forgot-password", status_code=200)
-@limiter.limit(lambda: get_limit("3/minute"))
+@limiter.limit(lambda: get_limit("3000/minute"))
 async def forgot_password(request: Request, data: ForgotPasswordRequest, db: Session = Depends(get_db)):
  
     user = db.query(User).filter(User.email == data.email).first()
