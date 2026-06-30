@@ -122,7 +122,7 @@ async def register(
 # ─── Login ────────────────────────────────────────────────────────────────────
 
 @router.post('/login', response_model=AuthResponse, status_code=200)
-@limiter.limit(lambda: get_limit("10/minute"))
+@limiter.limit(lambda: get_limit("200/minute"))
 async def login_user(request: Request, data: LoginRequest, db: Session = Depends(get_db)):
 
     existing_user = db.query(User).filter(User.email == data.email).first()
